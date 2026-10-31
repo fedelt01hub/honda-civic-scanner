@@ -2057,6 +2057,10 @@
     // DIAGNOSTIC & DTC CODES
     // =========================================================================
     function fetchDtcs() {
+      if (!isConnected) {
+        alert('⚠️ Primero debes conectarte al escáner por Bluetooth con el botón superior.');
+        return;
+      }
       bleCmdQueue.length = 0; // Limpiar GET_DIAG pendientes para prioridad inmediata
       sendBleCmd('GET_DTC');
       document.getElementById('dtcList').innerHTML =
@@ -2139,6 +2143,10 @@
     }
     function executeClearDtcs() {
       closeModal();
+      if (!isConnected) {
+        alert('⚠️ Primero debes conectarte al escáner por Bluetooth con el botón superior.');
+        return;
+      }
       bleCmdQueue.length = 0;
       document.getElementById('dtcList').innerHTML =
         '<div style="text-align:center; padding: 20px; color: var(--amber); font-weight: 700;">Enviando comando de reinicio (21 04 01 DA) a la ECU...</div>';
