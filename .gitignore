@@ -1,0 +1,19 @@
+# PlatformIO
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# Python / Virtualenv
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS / Temporary
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+*.git_backup
+.git_backup/
+
