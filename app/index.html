@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Civic OBD - Escáner & Datalogger</title>
+  <title>Civic OBD v22 - Escáner & Datalogger</title>
   
   <!-- Cache Control (Evita que el navegador retenga versiones viejas al recargar) -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -98,6 +98,17 @@
       border-radius: 6px;
       font-weight: 700;
       letter-spacing: 1px;
+    }
+    .brand-version {
+      font-size: 0.65rem;
+      background: rgba(0, 240, 255, 0.15);
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      color: var(--primary);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin-left: 4px;
     }
 
     .btn-connect {
@@ -839,7 +850,7 @@
     <div class="brand">
       <img src="icon.svg" class="brand-logo" alt="Civic OBD">
       <div>
-        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD2</span></div>
+        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD2</span> <span class="brand-version">v22</span></div>
       </div>
     </div>
     <button id="btnConnect" class="btn-connect" onclick="toggleBleConnection()">
@@ -1227,7 +1238,7 @@
   <main id="tabDiag" class="tab-content">
     <div class="datalogger-card">
       <h3 style="font-size:1.05rem; margin-bottom: 6px;">Códigos de Falla OBD (DTC)</h3>
-      <p style="font-size:0.8rem; color:var(--text-dim); margin-bottom: 14px;">Lee la memoria de diagnóstico 0x40-0x5F de la ECU Honda</p>
+      <p style="font-size:0.8rem; color:var(--text-dim); margin-bottom: 14px;">Lee la memoria de diagnóstico 0x40-0x6F de la ECU Honda</p>
 
       <button class="btn-action" style="background: rgba(0, 230, 118, 0.15); border-color: rgba(0, 230, 118, 0.4); color: var(--vtec);" onclick="fetchDtcs()">
         Escanear Códigos de Falla
@@ -1267,6 +1278,10 @@
     <!-- Consola de hardware -->
     <div class="grid-title">Diagnóstico de Enlace Físico</div>
     <div class="sensor-card" style="margin-bottom: 12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <span style="font-size:0.75rem; color:var(--text-dim); font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Estadísticas K-Line</span>
+        <span style="font-size:0.7rem; color:var(--primary); font-weight:800; background:rgba(0,240,255,0.12); border:1px solid rgba(0,240,255,0.3); padding:2px 7px; border-radius:4px;">App PWA v22</span>
+      </div>
       <div style="font-size:0.8rem; line-height: 1.6;" id="diagStatsText">
         Tramas Enviadas: 0 | Válidas: 0 | CRC Error: 0 | Timeouts: 0
       </div>
