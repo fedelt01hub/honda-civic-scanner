@@ -1486,6 +1486,8 @@
 
     function onBleDisconnected() {
       isConnected = false;
+      bleCmdQueue.length = 0;
+      isBleWriting = false;
       releaseWakeLock();
       updateBleUi(false);
       console.log('[BLE] Desconectado.');
@@ -1507,14 +1509,27 @@
       }
     }
 
+    let isBleWriting = false;
+    const bleCmdQueue = [];
+
     async function sendBleCmd(cmd) {
       if (!rxChar || !isConnected) return;
-      try {
-        const encoder = new TextEncoder();
-        await rxChar.writeValue(encoder.encode(cmd));
-      } catch (e) {
-        console.error('Error enviando comando BLE:', e);
+      // Evitar acumular múltiples GET_DIAG repetidos en la cola
+      if (cmd === 'GET_DIAG' && bleCmdQueue.includes('GET_DIAG')) return;
+      bleCmdQueue.push(cmd);
+      if (isBleWriting) return;
+
+      isBleWriting = true;
+      while (bleCmdQueue.length > 0 && rxChar && isConnected) {
+        const nextCmd = bleCmdQueue.shift();
+        try {
+          const encoder = new TextEncoder();
+          await rxChar.writeValue(encoder.encode(nextCmd));
+        } catch (err) {
+          console.error('Error enviando comando BLE:', nextCmd, err);
+        }
       }
+      isBleWriting = false;
     }
 
     // =========================================================================
@@ -1693,6 +1708,7 @@
                   <div style="margin-top: 4px;"><strong style="color:var(--primary);">Fila 0x30:</strong> ${msg.row3 || 'N/A'}</div>
                   <div style="margin-top: 4px;"><strong style="color:#ffb300;">DTC 0x40:</strong> ${msg.dtc0 || '(Escanear Códigos para consultar)'}</div>
                   <div style="margin-top: 4px;"><strong style="color:#ffb300;">DTC 0x50:</strong> ${msg.dtc1 || '(Escanear Códigos para consultar)'}</div>
+                  <div style="margin-top: 4px;"><strong style="color:#ffb300;">DTC 0x60:</strong> ${msg.dtc2 || '(Escanear Códigos para consultar)'}</div>
                 </div>
               </div>
             `;
@@ -2026,9 +2042,10 @@
     // DIAGNOSTIC & DTC CODES
     // =========================================================================
     function fetchDtcs() {
+      bleCmdQueue.length = 0; // Limpiar GET_DIAG pendientes para prioridad inmediata
       sendBleCmd('GET_DTC');
       document.getElementById('dtcList').innerHTML =
-        '<div style="text-align:center; padding: 20px; color: var(--text-dim);">Consultando memoria 0x40-0x5F...</div>';
+        '<div style="text-align:center; padding: 20px; color: var(--text-dim);">Consultando memoria 0x40-0x6F de la ECU...</div>';
     }
 
     function renderDtcList(msg) {
@@ -2056,7 +2073,7 @@
           list.innerHTML = `
             <div style="text-align:center; padding: 24px; background: rgba(255,179,0,0.1); border-radius: 14px; border: 1px solid rgba(255,179,0,0.4);">
               <div style="font-weight: 800; font-size: 1.1rem; color: #ffb300; margin-bottom: 6px;">CHECK ENGINE ACTIVO (MIL)</div>
-              <div style="font-size: 0.85rem; color: #fff; margin-bottom: 6px;">Foco encendido en tablero sin códigos en rango 0x40-0x5F</div>
+              <div style="font-size: 0.85rem; color: #fff; margin-bottom: 6px;">Foco encendido en tablero sin códigos en rango 0x40-0x6F</div>
               <div style="font-size: 0.76rem; color: var(--text-dim); line-height: 1.4;">
                 La ECU tiene encendida la luz de aviso pero el código puede ser > 63 (EVAP, catalizador, fallo de encendido) o de la transmisión automática (destello de D4). Revisa la guía de códigos abajo.
               </div>
@@ -2086,13 +2103,15 @@
 
     function handleClearDtcResponse(msg) {
       if (msg.ack) {
-        if (msg.remaining === 0 && !msg.mil) {
+        if (msg.verifyOk && msg.remaining === 0 && !msg.mil) {
           alert('¡Códigos borrados y confirmados exitosamente por la ECU!');
+        } else if (!msg.verifyOk) {
+          alert('La ECU aceptó el borrado y se está reiniciando. Verificando memoria nuevamente...');
         } else {
           alert('La ECU aceptó el comando de borrado, pero la falla aún está físicamente presente (se volvió a detectar de inmediato). Revisa el sensor o circuito indicado.');
         }
       } else {
-        alert('La ECU no confirmó el comando de borrado. Asegúrate de tener el motor apagado con la llave en posición ON (II) y reintenta.');
+        alert('La ECU no confirmó el comando de borrado. IMPORTANTE: En el Civic 99 debes tener el MOTOR APAGADO y la llave en posición ON (II) para que la ECU permita borrar códigos.');
       }
       fetchDtcs();
     }
@@ -2105,6 +2124,9 @@
     }
     function executeClearDtcs() {
       closeModal();
+      bleCmdQueue.length = 0;
+      document.getElementById('dtcList').innerHTML =
+        '<div style="text-align:center; padding: 20px; color: var(--amber); font-weight: 700;">Enviando comando de reinicio (21 04 01 DA) a la ECU...</div>';
       sendBleCmd('CLEAR_DTC');
     }
 

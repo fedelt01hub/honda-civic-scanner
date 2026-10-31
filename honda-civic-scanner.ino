@@ -107,14 +107,22 @@ void handlePendingCmd(PendingCmd cmd) {
       break;
     }
     case CMD_CLEAR_DTC: {
-      bool ack = honda.clearDTCs();
-      delay(500); // Pausa para permitir el reinicio de la memoria de la ECU
+      bool clearAck = honda.clearDTCs();
+      delay(800); // Esperar reinicio interno de la ECU P2P tras comando 21 04 01 DA
+      bool reinitOk = honda.sendInit(); // Reconecta y lee bloque 0x00 (actualizando data.mil real)
       std::vector<DtcCode> remainingCodes;
-      honda.getActiveDTCs(remainingCodes);
-      char buf[128];
-      snprintf(buf, sizeof(buf), "{\"type\":\"clearDtc\",\"ack\":%s,\"remaining\":%d,\"mil\":%s}",
-               ack ? "true" : "false", (int)remainingCodes.size(), honda.data.mil ? "true" : "false");
-      bleSendText(buf);
+      bool verifyOk = reinitOk && honda.getActiveDTCs(remainingCodes);
+      int remainingCount = verifyOk ? (int)remainingCodes.size() : -1;
+
+      char clearBuf[180];
+      snprintf(clearBuf, sizeof(clearBuf),
+               "{\"type\":\"clearDtc\",\"ack\":%s,\"verifyOk\":%s,\"remaining\":%d,\"mil\":%s}",
+               clearAck ? "true" : "false",
+               verifyOk ? "true" : "false",
+               remainingCount,
+               honda.data.mil ? "true" : "false");
+      bleSendText(clearBuf);
+      lastBleNotify = millis();
       break;
     }
     case CMD_ECHO: {
@@ -133,20 +141,20 @@ void handlePendingCmd(PendingCmd cmd) {
     }
     case CMD_GET_DIAG: {
       const DiagInfo &g = honda.diag;
-      char diagBuf[768];
+      char diagBuf[850];
       snprintf(diagBuf, sizeof(diagBuf),
                "{\"type\":\"diag\",\"state\":\"%s\",\"connected\":%s,\"mil\":%s,"
                "\"cmdSent\":%d,\"cmdOk\":%d,\"cmdTimeout\":%d,\"cmdCrcFail\":%d,"
                "\"rxBytes\":%d,\"echoOk\":%d,\"echoFail\":%d,\"ecuType\":%d,"
                "\"uptime\":%lu,\"row0\":\"%s\",\"row1\":\"%s\",\"row2\":\"%s\",\"row3\":\"%s\","
-               "\"dtc0\":\"%s\",\"dtc1\":\"%s\",\"rawEld\":%d,\"rawO2Sec\":%d,"
+               "\"dtc0\":\"%s\",\"dtc1\":\"%s\",\"dtc2\":\"%s\",\"rawEld\":%d,\"rawO2Sec\":%d,"
                "\"d8\":%d,\"d10\":%d,\"d11\":%d}",
                honda.stateName(), honda.data.connected ? "true" : "false", honda.data.mil ? "true" : "false",
                g.cmdSent, g.cmdOk, g.cmdTimeout, g.cmdCrcFail,
                g.rxBytes, g.echoOk, g.echoFail, honda.ecuType,
                millis() / 1000,
                g.row0Hex, g.row1Hex, g.row2Hex, g.row3Hex,
-               g.dtcRawHex[0], g.dtcRawHex[1], g.rawEldByte, g.rawO2SecByte,
+               g.dtcRawHex[0], g.dtcRawHex[1], g.dtcRawHex[2], g.rawEldByte, g.rawO2SecByte,
                g.d8Byte, g.d10Byte, g.d11Byte);
       bleSendText(diagBuf);
       lastBleNotify = millis(); // Evita que la trama binaria salga pegada al JSON
@@ -188,9 +196,11 @@ class RxCallbacks : public BLECharacteristicCallbacks {
     else if (rxValue == "CLEAR_DTC") {
       pendingCmd = CMD_CLEAR_DTC;
     }
-    // 5. Solicitar estadísticas de diagnóstico (se encola para ejecución en loop)
+    // 5. Solicitar estadísticas de diagnóstico (se encola solo si no hay comando prioritario)
     else if (rxValue == "GET_DIAG") {
-      pendingCmd = CMD_GET_DIAG;
+      if (pendingCmd == CMD_NONE) {
+        pendingCmd = CMD_GET_DIAG;
+      }
     }
     // 6. Prueba de eco de hardware (se encola)
     else if (rxValue == "ECHO") {

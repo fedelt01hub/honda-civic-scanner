@@ -250,6 +250,7 @@ bool HondaKLine::readMemory(uint8_t addr, uint8_t len, uint8_t* out) {
   }
 
   diag.cmdOk++;
+  data.lastSuccessTime = millis();
   memcpy(out, resp + 2, len);
   return true;
 }
@@ -507,8 +508,19 @@ void HondaKLine::update() {
 // Memoria 0x40-0x5F: cada byte contiene 2 códigos (nibble alto = código par,
 // nibble bajo = código impar). Basado en kerpz/ArduinoHondaOBD.
 // ============================================================================
+static bool isKnownDtc(int codeNum) {
+  for (size_t t = 0; t < sizeof(HONDA_DTC_TABLE) / sizeof(HONDA_DTC_TABLE[0]); t++) {
+    if (HONDA_DTC_TABLE[t].code == codeNum) return true;
+  }
+  return false;
+}
+
 static void pushDtc(std::vector<DtcCode>& v, int codeNum) {
-  for (size_t t = 0; t < sizeof(HONDA_DTC_TABLE)/sizeof(HONDA_DTC_TABLE[0]); t++) {
+  // Evitar códigos duplicados
+  for (size_t i = 0; i < v.size(); i++) {
+    if (v[i].code == codeNum) return;
+  }
+  for (size_t t = 0; t < sizeof(HONDA_DTC_TABLE) / sizeof(HONDA_DTC_TABLE[0]); t++) {
     if (HONDA_DTC_TABLE[t].code == codeNum) {
       v.push_back(HONDA_DTC_TABLE[t]);
       return;
@@ -529,6 +541,7 @@ bool HondaKLine::getActiveDTCs(std::vector<DtcCode>& activeCodes) {
   }
 
   uint8_t d[16];
+  // Leer bloques 0x40 (row 0) y 0x50 (row 1) obligatorios
   for (int row = 0; row < 2; row++) {
     uint8_t addr = 0x40 + row * 0x10;
     bool ok = false;
@@ -548,30 +561,36 @@ bool HondaKLine::getActiveDTCs(std::vector<DtcCode>& activeCodes) {
     logHex(row == 0 ? "DTC40" : "DTC50", d, 16);
 
     for (int i = 0; i < 16; i++) {
-      int base = row * 32 + i * 2;
+      if (d[i] == 0xFF) continue; // Ignorar byte sin inicializar
+      int baseCode = row * 32 + i * 2;
       if (d[i] >> 4) {
-        if (base > 0) pushDtc(activeCodes, base);
-        else klog("DTC byte 0 hi-nibble set (código interno ECU/ignorando)");
+        if (baseCode > 0) pushDtc(activeCodes, baseCode);
+        else klog("DTC byte 0 hi-nibble set (bandera interna ECU, ignorando)");
       }
       if (d[i] & 0x0F) {
-        int code = base + 1;
-        // Ajuste observado por kerpz en la primera fila
-        if (row == 0 && code == 23) code = 22;
-        else if (row == 0 && code == 24) code = 23;
-        pushDtc(activeCodes, code);
+        int oddCode = baseCode + 1;
+        pushDtc(activeCodes, oddCode);
       }
     }
   }
 
-  // Sondeo de diagnóstico experimental en fila 0x60 (para detectar códigos > 63)
+  // Leer bloque extendido 0x60 (row 2: códigos 64 a 95 como P0420, Misfires 71-74, EVAP 90-92)
   if (readMemory(0x60, 0x10, d)) {
+    snprintf(diag.dtcRawHex[2], sizeof(diag.dtcRawHex[2]),
+             "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
+             d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],
+             d[8], d[9], d[10], d[11], d[12], d[13], d[14], d[15]);
     logHex("DTC60", d, 16);
-    bool hasNonZero = false;
+
     for (int i = 0; i < 16; i++) {
-      if (d[i] != 0) hasNonZero = true;
-    }
-    if (hasNonZero) {
-      klog("AVISO: Detectada actividad en 0x60 (posibles códigos > 63 o A/T)");
+      if (d[i] == 0x00 || d[i] == 0xFF) continue;
+      int baseCode = 64 + i * 2;
+      if ((d[i] >> 4) && isKnownDtc(baseCode)) {
+        pushDtc(activeCodes, baseCode);
+      }
+      if ((d[i] & 0x0F) && isKnownDtc(baseCode + 1)) {
+        pushDtc(activeCodes, baseCode + 1);
+      }
     }
   }
 

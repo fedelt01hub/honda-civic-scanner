@@ -88,7 +88,7 @@ struct DiagInfo {
   char row1Hex[64] = "";
   char row2Hex[64] = "";
   char row3Hex[64] = "";
-  char dtcRawHex[2][64] = {"", ""};
+  char dtcRawHex[3][64] = {"", "", ""};
   uint8_t rawEldByte = 0;
   uint8_t rawO2SecByte = 0;
   uint8_t d8Byte = 0;
