@@ -1588,20 +1588,22 @@
         return;
       }
 
-      // Reensamblaje de fragmentos de texto / JSON (delimitado por \n o llaves completas)
+      // Si empieza por 0xA5 pero no cumplió la condición anterior (trama truncada o ruido), descartar
+      if (firstByte === 0xA5) return;
+
+      // Reensamblaje seguro de fragmentos JSON delimitados por '\n'
       try {
-        bleTextBuffer += textDecoder.decode(value);
+        bleTextBuffer += textDecoder.decode(value, { stream: true });
+        if (bleTextBuffer.length > 4096) bleTextBuffer = ''; // Protección contra desbordamiento
         while (bleTextBuffer.includes('\n')) {
           const idx = bleTextBuffer.indexOf('\n');
           const line = bleTextBuffer.substring(0, idx).trim();
           bleTextBuffer = bleTextBuffer.substring(idx + 1);
-          if (line.length > 0 && line.startsWith('{') && line.endsWith('}')) {
-            handleJsonMessage(line);
+          const startBrace = line.indexOf('{');
+          const endBrace = line.lastIndexOf('}');
+          if (startBrace !== -1 && endBrace > startBrace) {
+            handleJsonMessage(line.substring(startBrace, endBrace + 1));
           }
-        }
-        if (bleTextBuffer.trim().startsWith('{') && bleTextBuffer.trim().endsWith('}')) {
-          handleJsonMessage(bleTextBuffer.trim());
-          bleTextBuffer = '';
         }
       } catch (err) {
         console.error('Error procesando texto BLE:', err);
@@ -1623,9 +1625,16 @@
           if (rawContainer && (msg.row0 || msg.row1 || msg.d8 !== undefined)) {
             const d8 = (msg.d8 !== undefined) ? msg.d8 : 0;
             const d10 = (msg.d10 !== undefined) ? msg.d10 : 0;
+            const d11 = (msg.d11 !== undefined) ? msg.d11 : 0;
             const rawEld = (msg.rawEld !== undefined) ? msg.rawEld : 0;
             const eldVolt = (rawEld / 51.0).toFixed(2);
             const eldState = rawEld >= 250 ? '5.00V (Sin sensor ELD en caja fusibles / Circuito abierto)' : `${((245 - rawEld) * 0.35).toFixed(1)} A estimado`;
+
+            const rawO2Sec = (msg.rawO2Sec !== undefined) ? msg.rawO2Sec : 0;
+            const o2SecVolt = (rawO2Sec / 51.3).toFixed(2);
+            const o2SecState = rawO2Sec === 0
+              ? '0.00V (Circuito abierto / Sensor S2 inactivo - Causa Código 63)'
+              : `${o2SecVolt} V (Señal activa)`;
 
             const bitBadge = (name, val, activeColor = '#00e676') => `
               <div style="display:inline-flex; flex-direction:column; align-items:center; margin: 3px; padding: 5px 7px; background: ${val ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.35)'}; border-radius: 6px; border: 1px solid ${val ? activeColor : 'rgba(255,255,255,0.1)'}; min-width: 52px;">
@@ -1669,13 +1678,21 @@
                   <div style="color: var(--text-dim); font-size: 0.75rem;">Carga Alternador ALT FR: <strong style="color: var(--text);">${currentData ? currentData.altFr : 0}%</strong></div>
                 </div>
 
+                <div style="font-size: 0.75rem; font-weight: bold; color: var(--primary); margin-top: 8px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+                  Sensor O2 Secundario Post-Catalizador (Byte 0x16)
+                </div>
+                <div style="font-size: 0.8rem; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.06); line-height: 1.5;">
+                  <div>Byte O2 S2 ADC: <strong style="color:var(--text);">${rawO2Sec}</strong> (0x${rawO2Sec.toString(16).toUpperCase().padStart(2, '0')}) | <strong>${o2SecVolt} V</strong></div>
+                  <div style="color: var(--text-dim); font-size: 0.75rem;">Estado: <span style="color: ${rawO2Sec === 0 ? '#ff1744' : 'var(--vtec)'}; font-weight: bold;">${o2SecState}</span></div>
+                </div>
+
                 <div style="font-size: 0.72rem; color: var(--text-dim); font-family: monospace; line-height: 1.5; background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px; word-break: break-all;">
-                  <div><strong style="color:var(--primary);">Fila 0x00:</strong> ${msg.row0 || 'N/A'}</div>
+                  <div><strong style="color:var(--primary);">Fila 0x00:</strong> ${msg.row0 || 'N/A'} (d[11]=0x${d11.toString(16).toUpperCase().padStart(2, '0')})</div>
                   <div style="margin-top: 4px;"><strong style="color:var(--primary);">Fila 0x10:</strong> ${msg.row1 || 'N/A'}</div>
-                  ${msg.row2 ? `<div style="margin-top: 4px;"><strong style="color:var(--primary);">Fila 0x20:</strong> ${msg.row2}</div>` : ''}
-                  ${msg.row3 ? `<div style="margin-top: 4px;"><strong style="color:var(--primary);">Fila 0x30:</strong> ${msg.row3}</div>` : ''}
-                  ${msg.dtc0 ? `<div style="margin-top: 4px;"><strong style="color:#ffb300;">DTC 0x40:</strong> ${msg.dtc0}</div>` : ''}
-                  ${msg.dtc1 ? `<div style="margin-top: 4px;"><strong style="color:#ffb300;">DTC 0x50:</strong> ${msg.dtc1}</div>` : ''}
+                  <div style="margin-top: 4px;"><strong style="color:var(--primary);">Fila 0x20:</strong> ${msg.row2 || 'N/A'}</div>
+                  <div style="margin-top: 4px;"><strong style="color:var(--primary);">Fila 0x30:</strong> ${msg.row3 || 'N/A'}</div>
+                  <div style="margin-top: 4px;"><strong style="color:#ffb300;">DTC 0x40:</strong> ${msg.dtc0 || '(Escanear Códigos para consultar)'}</div>
+                  <div style="margin-top: 4px;"><strong style="color:#ffb300;">DTC 0x50:</strong> ${msg.dtc1 || '(Escanear Códigos para consultar)'}</div>
                 </div>
               </div>
             `;
@@ -2231,10 +2248,10 @@
     let diagPollInterval = null;
     function startDiagPolling() {
       if (diagPollInterval) clearInterval(diagPollInterval);
-      sendBleCmd('GET_DIAG');
+      if (isConnected) sendBleCmd('GET_DIAG');
       diagPollInterval = setInterval(() => {
-        if (bleConnected) sendBleCmd('GET_DIAG');
-      }, 1000);
+        if (isConnected) sendBleCmd('GET_DIAG');
+      }, 1500);
     }
 
     function stopDiagPolling() {

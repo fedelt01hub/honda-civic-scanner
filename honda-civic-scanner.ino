@@ -25,7 +25,8 @@ enum PendingCmd : uint8_t {
   CMD_GET_DTC,
   CMD_CLEAR_DTC,
   CMD_ECHO,
-  CMD_REINIT
+  CMD_REINIT,
+  CMD_GET_DIAG
 };
 volatile PendingCmd pendingCmd = CMD_NONE;
 
@@ -50,6 +51,7 @@ BLECharacteristic *pRxCharacteristic = nullptr;
 
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
+unsigned long lastBleNotify = 0;
 
 // Enviar cadena de texto / JSON por la característica TX
 void bleSendText(const String &str) {
@@ -65,7 +67,7 @@ void bleSendText(const String &str) {
     pTxCharacteristic->setValue((uint8_t *)(data + offset), chunk);
     pTxCharacteristic->notify();
     offset += chunk;
-    delay(10);
+    delay(15);
   }
 }
 
@@ -129,6 +131,27 @@ void handlePendingCmd(PendingCmd cmd) {
       bleSendText(String("{\"type\":\"reinit\",\"success\":") + (ok ? "true}" : "false}"));
       break;
     }
+    case CMD_GET_DIAG: {
+      const DiagInfo &g = honda.diag;
+      char diagBuf[768];
+      snprintf(diagBuf, sizeof(diagBuf),
+               "{\"type\":\"diag\",\"state\":\"%s\",\"connected\":%s,\"mil\":%s,"
+               "\"cmdSent\":%d,\"cmdOk\":%d,\"cmdTimeout\":%d,\"cmdCrcFail\":%d,"
+               "\"rxBytes\":%d,\"echoOk\":%d,\"echoFail\":%d,\"ecuType\":%d,"
+               "\"uptime\":%lu,\"row0\":\"%s\",\"row1\":\"%s\",\"row2\":\"%s\",\"row3\":\"%s\","
+               "\"dtc0\":\"%s\",\"dtc1\":\"%s\",\"rawEld\":%d,\"rawO2Sec\":%d,"
+               "\"d8\":%d,\"d10\":%d,\"d11\":%d}",
+               honda.stateName(), honda.data.connected ? "true" : "false", honda.data.mil ? "true" : "false",
+               g.cmdSent, g.cmdOk, g.cmdTimeout, g.cmdCrcFail,
+               g.rxBytes, g.echoOk, g.echoFail, honda.ecuType,
+               millis() / 1000,
+               g.row0Hex, g.row1Hex, g.row2Hex, g.row3Hex,
+               g.dtcRawHex[0], g.dtcRawHex[1], g.rawEldByte, g.rawO2SecByte,
+               g.d8Byte, g.d10Byte, g.d11Byte);
+      bleSendText(diagBuf);
+      lastBleNotify = millis(); // Evita que la trama binaria salga pegada al JSON
+      break;
+    }
     default:
       break;
   }
@@ -165,25 +188,9 @@ class RxCallbacks : public BLECharacteristicCallbacks {
     else if (rxValue == "CLEAR_DTC") {
       pendingCmd = CMD_CLEAR_DTC;
     }
-    // 5. Solicitar estadísticas de diagnóstico
+    // 5. Solicitar estadísticas de diagnóstico (se encola para ejecución en loop)
     else if (rxValue == "GET_DIAG") {
-      const DiagInfo &g = honda.diag;
-      char buf[768];
-      snprintf(buf, sizeof(buf),
-               "{\"type\":\"diag\",\"state\":\"%s\",\"connected\":%s,\"mil\":%s,"
-               "\"cmdSent\":%d,\"cmdOk\":%d,\"cmdTimeout\":%d,\"cmdCrcFail\":%d,"
-               "\"rxBytes\":%d,\"echoOk\":%d,\"echoFail\":%d,\"ecuType\":%d,"
-               "\"uptime\":%lu,\"row0\":\"%s\",\"row1\":\"%s\",\"row2\":\"%s\",\"row3\":\"%s\","
-               "\"dtc0\":\"%s\",\"dtc1\":\"%s\",\"rawEld\":%d,"
-               "\"d8\":%d,\"d10\":%d}",
-               honda.stateName(), honda.data.connected ? "true" : "false", honda.data.mil ? "true" : "false",
-               g.cmdSent, g.cmdOk, g.cmdTimeout, g.cmdCrcFail,
-               g.rxBytes, g.echoOk, g.echoFail, honda.ecuType,
-               millis() / 1000,
-               g.row0Hex, g.row1Hex, g.row2Hex, g.row3Hex,
-               g.dtcRawHex[0], g.dtcRawHex[1], g.rawEldByte,
-               g.d8Byte, g.d10Byte);
-      bleSendText(buf);
+      pendingCmd = CMD_GET_DIAG;
     }
     // 6. Prueba de eco de hardware (se encola)
     else if (rxValue == "ECHO") {
@@ -367,7 +374,6 @@ void loop() {
   }
 
   // Notificar telemetría por BLE cada 50ms (20 Hz)
-  static unsigned long lastBleNotify = 0;
   unsigned long now = millis();
   if (deviceConnected && (now - lastBleNotify >= 50)) {
     lastBleNotify = now;

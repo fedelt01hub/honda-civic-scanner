@@ -46,6 +46,7 @@ struct TelemetryData {
   int baro = 0;               // 0x13: Presión barométrica ambiental en kPa
   int tps = 0;                // 0x14: Posición mariposa acelerador %
   float o2 = 0.0f;            // 0x15: Sonda lambda primaria en Volts (0.0 a 1.0 V)
+  float o2Sec = 0.0f;         // 0x16: Sonda lambda secundaria en Volts (0.0 a 1.25 V)
   float batt = 0.0f;          // 0x17: Voltaje de batería en V
   int altFr = 0;              // 0x18: Señal de carga del alternador %
   float eld = 0.0f;           // 0x19: Detector de Carga Eléctrica en Amperios (A)
@@ -89,8 +90,10 @@ struct DiagInfo {
   char row3Hex[64] = "";
   char dtcRawHex[2][64] = {"", ""};
   uint8_t rawEldByte = 0;
+  uint8_t rawO2SecByte = 0;
   uint8_t d8Byte = 0;
   uint8_t d10Byte = 0;
+  uint8_t d11Byte = 0;
 };
 
 struct DtcCode {

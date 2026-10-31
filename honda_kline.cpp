@@ -386,18 +386,20 @@ void HondaKLine::update() {
 
         diag.d8Byte = d[8];
         diag.d10Byte = d[10];
+        diag.d11Byte = d[11];
 
         // Estados discretos (0x08, 0x0A y 0x0B)
         // Dirección 0x08 (d[8]): Bit 1 = Relé A/C, Bit 2 = Switch A/C, Bit 3 = Switch Pedal Freno
         // Bit 4 y Bit 5 = Selector P/N (transmisión automática ATP)
         // Bit 7 = Switch presión VTEC (en variantes D16Y8 P2P OBD2)
         // Dirección 0x0A (d[10]): Bit 2 = Solenoide VTEC (VTS), Bit 3 = Switch Presión VTEC (VTPS)
-        // Dirección 0x0B (d[11]): Bit 5 = Indicador de falla Check Engine (MIL) en ECU
+        // Dirección 0x0B (d[11]): Bit 5 / Bit 6 = Indicador de falla Check Engine (MIL) en ECU
         data.vtec = ((d[10] & (1 << 2)) != 0) || ((d[10] & (1 << 3)) != 0) || ((d[8] & (1 << 7)) != 0);
         data.brake = (d[8] & (1 << 3)) != 0;
         data.ac = ((d[8] & (1 << 2)) != 0) || ((d[8] & (1 << 1)) != 0);
         data.parkNeutral = ((d[8] & (1 << 4)) != 0) || ((d[8] & (1 << 5)) != 0);
-        data.mil = (d[11] & (1 << 5)) != 0;
+        // En ECU P2P (D16Y8), 0x0B reporta 0x41 con Check Engine activo (Bit 6 / Bit 5)
+        data.mil = ((d[11] & (1 << 5)) != 0) || ((d[11] & (1 << 6)) != 0);
 
         // Marcha estimada (Civic 4-velocidades automático)
         if (data.vss > 5 && data.rpm > 600) {
@@ -432,10 +434,12 @@ void HondaKLine::update() {
         data.mapInHg = (101.325f - (float)data.map) * 0.2953f;
         if (data.mapInHg < 0.0f) data.mapInHg = 0.0f;
 
-        data.baro = (int)roundf(d[3] * 0.716f - 5.0f);
-        data.tps  = constrain(((int)d[4] - 24) / 2, 0, 100);
-        data.o2   = constrain(d[5] / 51.3f, 0.0f, 1.25f);
-        data.batt = d[7] / 10.45f;
+        data.baro  = (int)roundf(d[3] * 0.716f - 5.0f);
+        data.tps   = constrain(((int)d[4] - 24) / 2, 0, 100);
+        data.o2    = constrain(d[5] / 51.3f, 0.0f, 1.25f);
+        data.o2Sec = constrain(d[6] / 51.3f, 0.0f, 1.25f);
+        diag.rawO2SecByte = d[6];
+        data.batt  = d[7] / 10.45f;
         data.altFr = constrain((int)roundf(d[8] / 2.55f), 0, 100);
         
         // Calibración ELD (Detector de Carga Eléctrica Honda):
@@ -645,6 +649,7 @@ void HondaKLine::updateDemo() {
   } else data.gear = 1;
 
   data.o2 = 0.1f + s * 0.8f;
+  data.o2Sec = 0.65f;
   data.altFr = (int)(30 + s * 40);
   data.eld = 18.5f + s * 22.0f;
   data.ign = 14.0f + s * 18.0f;
