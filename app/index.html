@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Civic OBD v22 - Escáner & Datalogger</title>
+  <title>Civic OBD v23 - Escáner & Datalogger</title>
   
   <!-- Cache Control (Evita que el navegador retenga versiones viejas al recargar) -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -17,10 +17,11 @@
   <meta name="apple-mobile-web-app-title" content="Civic OBD">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@1,700;1,900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@1,700;1,900&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@1,700;1,900&display=swap"></noscript>
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/svg+xml" href="icon.svg">
-  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
 
   <style>
     :root {
@@ -848,9 +849,9 @@
   <!-- Header: Solo Civic '99 y Conectar Bluetooth -->
   <header>
     <div class="brand">
-      <img src="icon.svg" class="brand-logo" alt="Civic OBD">
+      <img src="icon-192.png" class="brand-logo" alt="Civic OBD">
       <div>
-        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD2</span> <span class="brand-version">v22</span></div>
+        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD2</span> <span class="brand-version">v23</span></div>
       </div>
     </div>
     <button id="btnConnect" class="btn-connect" onclick="toggleBleConnection()">
@@ -858,6 +859,12 @@
       <span id="bleStatusText">Conectar Bluetooth</span>
     </button>
   </header>
+
+  <!-- Banner de instalación PWA para uso 100% offline -->
+  <div id="installBanner" style="display:none; align-items:center; justify-content:space-between; background:rgba(0, 229, 255, 0.12); border:1px solid rgba(0, 229, 255, 0.3); border-radius:12px; margin: 8px 12px; padding: 10px 14px; font-size:0.85rem; color:#f0f4f8; gap:10px;">
+    <span>📱 Instalar app para acceso rápido 100% sin conexión / datos</span>
+    <button id="btnInstall" style="background:var(--ac-color); color:#0a0d14; border:none; padding:8px 16px; border-radius:8px; font-weight:700; cursor:pointer; flex-shrink:0;">Instalar</button>
+  </div>
 
   <!-- TAB 1: DASHBOARD -->
   <main id="tabDashboard" class="tab-content active">
@@ -1397,17 +1404,22 @@
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      document.getElementById('installBanner').style.display = 'flex';
+      const banner = document.getElementById('installBanner');
+      if (banner) banner.style.display = 'flex';
     });
-    document.getElementById('btnInstall').addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        document.getElementById('installBanner').style.display = 'none';
-      }
-      deferredPrompt = null;
-    });
+    const btnInstallEl = document.getElementById('btnInstall');
+    if (btnInstallEl) {
+      btnInstallEl.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          const banner = document.getElementById('installBanner');
+          if (banner) banner.style.display = 'none';
+        }
+        deferredPrompt = null;
+      });
+    }
 
     // =========================================================================
     // SCREEN WAKE LOCK (Mantiene la pantalla encendida durante el viaje)

@@ -1,8 +1,11 @@
-const CACHE_NAME = 'civic-obd-v22';
+const CACHE_NAME = 'civic-obd-v23';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './icon.png',
   './icon.svg'
 ];
 
@@ -15,7 +18,7 @@ self.addEventListener('install', (event) => {
           const res = await fetch(asset, { cache: 'reload' });
           if (res.ok) await cache.put(asset, res);
         } catch (e) {
-          console.warn('Pre-cache error:', asset, e);
+          console.warn('[SW] Pre-cache error:', asset, e);
         }
       }
     })
@@ -27,16 +30,22 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) return caches.delete(key);
+          if (key !== CACHE_NAME) {
+            console.log('[SW] Deleting old cache:', key);
+            return caches.delete(key);
+          }
         })
       )
     ).then(() => self.clients.claim())
   );
 });
 
-// Network-First para navegación y HTML; Cache-First para recursos estáticos
+// Cache-First con Stale-While-Revalidate para navegación y assets
+// Permite que la app abra instantáneamente al 100% sin datos/wifi
 self.addEventListener('fetch', (event) => {
   const req = event.request;
+  if (req.method !== 'GET') return;
+
   const isHtml = req.mode === 'navigate' ||
                  req.headers.get('accept')?.includes('text/html') ||
                  req.url.endsWith('/') ||
@@ -44,17 +53,30 @@ self.addEventListener('fetch', (event) => {
 
   if (isHtml) {
     event.respondWith(
-      fetch(req, { cache: 'no-cache' })
-        .then((netRes) => {
-          if (netRes && netRes.status === 200) {
-            const clone = netRes.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
-          }
-          return netRes;
-        })
-        .catch(() => caches.match(req).then((cached) => cached || caches.match('./index.html') || caches.match('./')))
+      caches.match(req).then((cached) => {
+        // En segundo plano intentamos actualizar la caché si hay conexión
+        const fetchPromise = fetch(req, { cache: 'no-cache' })
+          .then((netRes) => {
+            if (netRes && netRes.status === 200) {
+              const clone = netRes.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+            }
+            return netRes;
+          })
+          .catch(() => null);
+
+        // Si tenemos caché (modo sin datos/wifi), responder inmediatamente
+        if (cached) return cached;
+
+        // Si no está en caché directa, intentar network o fallback a index.html en caché
+        return fetchPromise.then((netRes) => {
+          if (netRes) return netRes;
+          return caches.match('./index.html').then((fallback) => fallback || caches.match('./'));
+        });
+      })
     );
   } else {
+    // Recursos estáticos (imágenes, manifest, iconos)
     event.respondWith(
       caches.match(req).then((cached) => {
         if (cached) return cached;
@@ -64,6 +86,11 @@ self.addEventListener('fetch', (event) => {
             caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
           }
           return netRes;
+        }).catch(() => {
+          // Si falla y es un icono, devolver icon-192.png si está en caché
+          if (req.url.includes('icon')) {
+            return caches.match('./icon-192.png');
+          }
         });
       })
     );
