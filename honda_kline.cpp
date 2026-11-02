@@ -213,8 +213,14 @@ bool HondaKLine::sendInit() {
   _initialized = true;
   data.connected = true;
   data.lastSuccessTime = millis();
+
+  // Actualizar estado real del testigo Check Engine (MIL) desde el bloque 0x00 recién leído
+  diag.d8Byte  = buf[8];
+  diag.d10Byte = buf[10];
+  diag.d11Byte = buf[11];
+  data.mil = ((buf[11] & (1 << 5)) != 0) || ((buf[11] & (1 << 6)) != 0);
   
-  klog("CONEXIÓN EXITOSA CON LA ECU");
+  klog("CONEXIÓN EXITOSA CON LA ECU (MIL=%d)", data.mil ? 1 : 0);
   snprintf(diag.lastError, sizeof(diag.lastError), "Conectado OK (intento #%d)", diag.initAttempts);
   return true;
 }
@@ -341,6 +347,8 @@ void HondaKLine::update() {
   // If connection has been silent for more than 3 seconds, mark as disconnected
   if (data.connected && (now - data.lastSuccessTime > 3000)) {
     data.connected = false;
+    data.rpm = 0;
+    data.vss = 0;
     _initialized = false;
     diag.state = KLINE_IDLE;
     klog("Timeout de comunicación - desconectado.");
@@ -432,10 +440,11 @@ void HondaKLine::update() {
         data.iat  = calculateHondaTemp(d[1]);
         data.map  = (int)roundf(d[2] * 0.716f - 5.0f);
         if (data.map < 0) data.map = 0;
-        data.mapInHg = (101.325f - (float)data.map) * 0.2953f;
-        if (data.mapInHg < 0.0f) data.mapInHg = 0.0f;
 
-        data.baro  = (int)roundf(d[3] * 0.716f - 5.0f);
+        data.baro = (int)roundf(d[3] * 0.716f - 5.0f);
+        float baroRef = (data.baro > 50) ? (float)data.baro : 101.325f;
+        data.mapInHg = (baroRef - (float)data.map) * 0.2953f;
+        if (data.mapInHg < 0.0f) data.mapInHg = 0.0f;
         data.tps   = constrain(((int)d[4] - 24) / 2, 0, 100);
         data.o2    = constrain(d[5] / 51.3f, 0.0f, 1.25f);
         data.o2Sec = constrain(d[6] / 51.3f, 0.0f, 1.25f);
@@ -537,12 +546,17 @@ bool HondaKLine::getActiveDTCs(std::vector<DtcCode>& activeCodes) {
     activeCodes.push_back(HONDA_DTC_TABLE[0]); // Code 1 (O2)
     activeCodes.push_back(HONDA_DTC_TABLE[9]); // Code 14 (IACV)
     data.dtcCount = (int)activeCodes.size();
-    diag.freezeFrame.valid = true;
-    diag.freezeFrame.rawEct  = 0x1D;
-    diag.freezeFrame.rawIat  = 0x57;
-    diag.freezeFrame.rawMap  = 0x6A;
-    diag.freezeFrame.rawBaro = 0x8D;
-    diag.freezeFrame.rawTps  = 0x18;
+    diag.freezeFrame.valid    = true;
+    diag.freezeFrame.rawVss   = 0x00;
+    diag.freezeFrame.rawRpmHi = 0x0B;
+    diag.freezeFrame.rawRpmLo = 0x00;
+    diag.freezeFrame.rawEct   = 0x1D;
+    diag.freezeFrame.rawIat   = 0x57;
+    diag.freezeFrame.rawMap   = 0x6A;
+    diag.freezeFrame.rawBaro  = 0x8D;
+    diag.freezeFrame.rawTps   = 0x18;
+    diag.freezeFrame.vss  = 0;
+    diag.freezeFrame.rpm  = 704;
     diag.freezeFrame.ect  = 94;
     diag.freezeFrame.iat  = 53;
     diag.freezeFrame.map  = 71;
@@ -593,9 +607,9 @@ bool HondaKLine::getActiveDTCs(std::vector<DtcCode>& activeCodes) {
              d[8], d[9], d[10], d[11], d[12], d[13], d[14], d[15]);
     logHex("DTC60", d, 16);
 
-    // En ECU Honda P2P, los DTCs terminan en 0x61 (i < 2: códigos 64 a 67).
-    // A partir de 0x62 (i >= 2) residen los registros del Freeze Frame (sensores ECT, IAT, MAP, BARO, TPS).
-    for (int i = 0; i < 2; i++) {
+    // En ECU Honda P2P (3-pin), solo el byte 0x60 (i = 0) contiene códigos extendidos (64 y 65).
+    // A partir de 0x61 (i >= 1) inicia el Freeze Frame: 0x61=VSS, 0x62-0x63=RPM, 0x64=ECT, 0x65=IAT, 0x66=MAP, 0x67=BARO, 0x68=TPS.
+    for (int i = 0; i < 1; i++) {
       if (d[i] == 0x00 || d[i] == 0xFF) continue;
       int baseCode = 64 + i * 2;
       if ((d[i] >> 4) && isKnownDtc(baseCode)) {
@@ -606,20 +620,32 @@ bool HondaKLine::getActiveDTCs(std::vector<DtcCode>& activeCodes) {
       }
     }
 
-    // Decodificar Freeze Frame si hay datos válidos grabados (0x64 a 0x68)
-    uint8_t rawEct  = d[4]; // 0x64
-    uint8_t rawIat  = d[5]; // 0x65
-    uint8_t rawMap  = d[6]; // 0x66
-    uint8_t rawBaro = d[7]; // 0x67
-    uint8_t rawTps  = d[8]; // 0x68
+    // Decodificar Freeze Frame si hay datos válidos grabados (0x61 a 0x68)
+    uint8_t rawVss   = d[1]; // 0x61
+    uint8_t rawRpmHi = d[2]; // 0x62
+    uint8_t rawRpmLo = d[3]; // 0x63
+    uint8_t rawEct   = d[4]; // 0x64
+    uint8_t rawIat   = d[5]; // 0x65
+    uint8_t rawMap   = d[6]; // 0x66
+    uint8_t rawBaro  = d[7]; // 0x67
+    uint8_t rawTps   = d[8]; // 0x68
 
     if (rawEct != 0x00 && rawEct != 0xFF && rawMap != 0x00 && rawMap != 0xFF) {
-      diag.freezeFrame.valid = true;
-      diag.freezeFrame.rawEct  = rawEct;
-      diag.freezeFrame.rawIat  = rawIat;
-      diag.freezeFrame.rawMap  = rawMap;
-      diag.freezeFrame.rawBaro = rawBaro;
-      diag.freezeFrame.rawTps  = rawTps;
+      diag.freezeFrame.valid    = true;
+      diag.freezeFrame.rawVss   = rawVss;
+      diag.freezeFrame.rawRpmHi = rawRpmHi;
+      diag.freezeFrame.rawRpmLo = rawRpmLo;
+      diag.freezeFrame.rawEct   = rawEct;
+      diag.freezeFrame.rawIat   = rawIat;
+      diag.freezeFrame.rawMap   = rawMap;
+      diag.freezeFrame.rawBaro  = rawBaro;
+      diag.freezeFrame.rawTps   = rawTps;
+
+      uint16_t rawFfRpm = ((uint16_t)rawRpmHi << 8) | rawRpmLo;
+      diag.freezeFrame.rpm  = (ecuType == 1)
+        ? ((rawFfRpm == 0xFFFF || rawFfRpm == 0) ? 0 : (int)(1875000UL / ((uint32_t)rawFfRpm + 1)))
+        : (rawFfRpm / 4);
+      diag.freezeFrame.vss  = rawVss;
       diag.freezeFrame.ect  = calculateHondaTemp(rawEct);
       diag.freezeFrame.iat  = calculateHondaTemp(rawIat);
       diag.freezeFrame.map  = (int)roundf(rawMap * 0.716f - 5.0f);
@@ -627,10 +653,10 @@ bool HondaKLine::getActiveDTCs(std::vector<DtcCode>& activeCodes) {
       diag.freezeFrame.baro = (int)roundf(rawBaro * 0.716f - 5.0f);
       diag.freezeFrame.tps  = constrain(((int)rawTps - 24) / 2, 0, 100);
 
-      klog("FreezeFrame ECU: ECT=%d°C IAT=%d°C MAP=%dkPa BARO=%dkPa TPS=%d%% (Raw: %02X %02X %02X %02X %02X)",
+      klog("FreezeFrame ECU: RPM=%d VSS=%dkm/h ECT=%d°C IAT=%d°C MAP=%dkPa BARO=%dkPa TPS=%d%%",
+           diag.freezeFrame.rpm, diag.freezeFrame.vss,
            diag.freezeFrame.ect, diag.freezeFrame.iat, diag.freezeFrame.map,
-           diag.freezeFrame.baro, diag.freezeFrame.tps,
-           rawEct, rawIat, rawMap, rawBaro, rawTps);
+           diag.freezeFrame.baro, diag.freezeFrame.tps);
     } else {
       diag.freezeFrame.valid = false;
     }

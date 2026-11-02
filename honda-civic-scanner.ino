@@ -92,19 +92,13 @@ void handlePendingCmd(PendingCmd cmd) {
       if (ok) {
         String json = "{\"type\":\"dtc\",\"ok\":true,\"mil\":" + String(honda.data.mil ? "true" : "false");
         if (honda.diag.freezeFrame.valid) {
-          char ffBuf[160];
+          char ffBuf[256];
+          const FreezeFrame &ff = honda.diag.freezeFrame;
           snprintf(ffBuf, sizeof(ffBuf),
-                   ",\"freezeFrame\":{\"ect\":%d,\"iat\":%d,\"map\":%d,\"baro\":%d,\"tps\":%d,\"rawHex\":\"%02X %02X %02X %02X %02X\"}",
-                   honda.diag.freezeFrame.ect,
-                   honda.diag.freezeFrame.iat,
-                   honda.diag.freezeFrame.map,
-                   honda.diag.freezeFrame.baro,
-                   honda.diag.freezeFrame.tps,
-                   honda.diag.freezeFrame.rawEct,
-                   honda.diag.freezeFrame.rawIat,
-                   honda.diag.freezeFrame.rawMap,
-                   honda.diag.freezeFrame.rawBaro,
-                   honda.diag.freezeFrame.rawTps);
+                   ",\"freezeFrame\":{\"rpm\":%d,\"vss\":%d,\"ect\":%d,\"iat\":%d,\"map\":%d,\"baro\":%d,\"tps\":%d,"
+                   "\"rawHex\":\"%02X %02X %02X %02X %02X %02X %02X %02X\"}",
+                   ff.rpm, ff.vss, ff.ect, ff.iat, ff.map, ff.baro, ff.tps,
+                   ff.rawVss, ff.rawRpmHi, ff.rawRpmLo, ff.rawEct, ff.rawIat, ff.rawMap, ff.rawBaro, ff.rawTps);
           json += ffBuf;
         }
         json += ",\"codes\":[";

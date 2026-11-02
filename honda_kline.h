@@ -68,11 +68,16 @@ struct TelemetryData {
 
 struct FreezeFrame {
   bool valid = false;
+  int rpm = 0;          // RPM congeladas (0x62-0x63: raw / 4)
+  int vss = 0;          // km/h congelados (0x61)
   int ect = 0;          // °C (0x64)
   int iat = 0;          // °C (0x65)
   int map = 0;          // kPa (0x66)
   int baro = 0;         // kPa (0x67)
   int tps = 0;          // % (0x68)
+  uint8_t rawVss = 0;
+  uint8_t rawRpmHi = 0;
+  uint8_t rawRpmLo = 0;
   uint8_t rawEct = 0;
   uint8_t rawIat = 0;
   uint8_t rawMap = 0;

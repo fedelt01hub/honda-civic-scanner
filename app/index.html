@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Civic OBD v24 - Escáner & Datalogger</title>
+  <title>Civic OBD v25 - Escáner & Datalogger</title>
   
   <!-- Cache Control (Evita que el navegador retenga versiones viejas al recargar) -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -30,6 +30,7 @@
       --card-border: rgba(255, 255, 255, 0.08);
       --text: #f0f4f8;
       --text-dim: #8b9bb4;
+      --primary: #00e5ff;
       --accent: #ff2d55;
       --accent-glow: rgba(255, 45, 85, 0.4);
       --vtec: #00e676;
@@ -939,7 +940,7 @@
     <div class="brand">
       <img src="icon-192.png" class="brand-logo" alt="Civic OBD">
       <div>
-        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD2</span> <span class="brand-version" id="brandVersionBadge" onclick="checkAppUpdatesManually()" title="Buscar actualizaciones">v24</span></div>
+        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD2</span> <span class="brand-version" id="brandVersionBadge" onclick="checkAppUpdatesManually()" title="Buscar actualizaciones">v25</span></div>
       </div>
     </div>
     <button id="btnConnect" class="btn-connect" onclick="toggleBleConnection()">
@@ -1383,7 +1384,7 @@
     <div class="sensor-card" style="margin-bottom: 12px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
         <span style="font-size:0.75rem; color:var(--text-dim); font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Estadísticas K-Line</span>
-        <span style="font-size:0.7rem; color:var(--primary); font-weight:800; background:rgba(0,240,255,0.12); border:1px solid rgba(0,240,255,0.3); padding:2px 7px; border-radius:4px;">App PWA v24</span>
+        <span style="font-size:0.7rem; color:var(--primary); font-weight:800; background:rgba(0,240,255,0.12); border:1px solid rgba(0,240,255,0.3); padding:2px 7px; border-radius:4px;">App PWA v25</span>
       </div>
       <div style="font-size:0.8rem; line-height: 1.6;" id="diagStatsText">
         Tramas Enviadas: 0 | Válidas: 0 | CRC Error: 0 | Timeouts: 0
@@ -1402,7 +1403,7 @@
     <div class="sensor-card" style="margin-bottom: 14px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
         <span style="font-size:0.85rem; font-weight:700; color:var(--text);">Versión Instalada</span>
-        <span id="pwaVersionTag" style="font-size:0.75rem; color:var(--primary); font-weight:800; background:rgba(0,240,255,0.15); border:1px solid rgba(0,240,255,0.4); padding:3px 9px; border-radius:6px;">v24</span>
+        <span id="pwaVersionTag" style="font-size:0.75rem; color:var(--primary); font-weight:800; background:rgba(0,240,255,0.15); border:1px solid rgba(0,240,255,0.4); padding:3px 9px; border-radius:6px;">v25</span>
       </div>
       <div id="updateStatusText" style="font-size:0.78rem; color:var(--text-dim); margin-bottom:12px; line-height:1.4;">
         Esta app funciona 100% offline. Toca el botón para verificar con GitHub si hay una nueva versión disponible.
@@ -1491,7 +1492,7 @@
     // =========================================================================
     // SISTEMA DE ACTUALIZACIÓN MANUAL Y GESTIÓN DE CACHÉ PWA
     // =========================================================================
-    const APP_CURRENT_VERSION = 'v24';
+    const APP_CURRENT_VERSION = 'v25';
     let toastTimeout = null;
 
     function showToast(msg, duration = 3200) {
@@ -2124,7 +2125,8 @@
       if (chartHistory.length > 100) chartHistory.shift();
       drawChart();
 
-      if (!isRecording) return;
+      // No grabar filas repetidas si la grabación está inactiva o la ECU se desconectó al apagar la llave
+      if (!isRecording || !d.connected) return;
 
       const row = [
         now - recordStartTime,
@@ -2355,6 +2357,16 @@
               Captura del motor al momento exacto en que la ECU detectó la falla:
             </div>
             <div class="freeze-grid">
+              ${ff.rpm !== undefined ? `
+              <div class="freeze-item">
+                <div class="freeze-label">Motor</div>
+                <div class="freeze-val">${ff.rpm} <span style="font-size:0.65rem;">RPM</span></div>
+              </div>` : ''}
+              ${ff.vss !== undefined ? `
+              <div class="freeze-item">
+                <div class="freeze-label">Velocidad</div>
+                <div class="freeze-val">${ff.vss} <span style="font-size:0.65rem;">km/h</span></div>
+              </div>` : ''}
               <div class="freeze-item">
                 <div class="freeze-label">Refrigerante</div>
                 <div class="freeze-val">${ff.ect}°C</div>
