@@ -894,7 +894,7 @@
     <div class="brand">
       <img src="icon-192.png" class="brand-logo" alt="Civic OBD">
       <div>
-        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD2</span> <span class="brand-version" id="brandVersionBadge" onclick="checkAppUpdatesManually()" title="Tocar para buscar actualizaciones">v24 🔄</span></div>
+        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD2</span> <span class="brand-version" id="brandVersionBadge" onclick="checkAppUpdatesManually()" title="Buscar actualizaciones">v24</span></div>
       </div>
     </div>
     <button id="btnConnect" class="btn-connect" onclick="toggleBleConnection()">
@@ -1364,10 +1364,10 @@
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <button id="btnCheckUpdateManual" class="btn-action" style="flex:1; min-width:140px; margin:0; background:rgba(0,240,255,0.15); border:1px solid var(--primary); color:var(--primary);" onclick="checkAppUpdatesManually()">
-          🔄 Buscar Actualización
+          Buscar Actualización
         </button>
         <button class="btn-action" style="flex:1; min-width:140px; margin:0; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:var(--text);" onclick="forceCleanReload()">
-          🧹 Limpiar Caché y Recargar
+          Limpiar Caché y Recargar
         </button>
       </div>
     </div>
@@ -1470,11 +1470,11 @@
       const btn = document.getElementById('btnCheckUpdateManual');
       if (btn) btn.disabled = true;
 
-      showToast('🔍 Verificando nuevas versiones en GitHub...', 3000);
+      showToast('Verificando nuevas versiones en GitHub...', 3000);
       if (statusEl) statusEl.textContent = 'Verificando con GitHub...';
 
       if (!navigator.onLine) {
-        showToast('⚠️ Sin conexión a Internet. Conéctate a WiFi o datos.', 4000);
+        showToast('Sin conexión a Internet. Conéctate a WiFi o datos.', 4000);
         if (statusEl) statusEl.textContent = 'Sin conexión a Internet. Conéctate a WiFi o datos móviles.';
         if (btn) btn.disabled = false;
         return;
@@ -1489,8 +1489,8 @@
         const serverVersion = match ? match[1].replace('civic-obd-', '') : null;
 
         if (serverVersion && serverVersion !== APP_CURRENT_VERSION) {
-          showToast(`🚀 ¡Nueva versión disponible (${serverVersion})! Actualizando...`, 4000);
-          if (statusEl) statusEl.textContent = `¡Nueva versión encontrada (${serverVersion})! Descargando...`;
+          showToast(`Nueva versión disponible (${serverVersion}). Actualizando...`, 4000);
+          if (statusEl) statusEl.textContent = `Nueva versión encontrada (${serverVersion}). Descargando...`;
           setTimeout(() => {
             forceCleanReload();
           }, 1200);
@@ -1503,7 +1503,7 @@
           if (reg) {
             await reg.update();
             if (reg.waiting) {
-              showToast('🚀 Actualización lista. Recargando...', 2000);
+              showToast('Actualización lista. Recargando...', 2000);
               setTimeout(() => {
                 forceCleanReload();
               }, 1000);
@@ -1512,11 +1512,11 @@
           }
         }
 
-        showToast(`✅ ¡Ya tienes la versión más reciente (${APP_CURRENT_VERSION})!`, 3500);
+        showToast(`Tienes la versión más reciente (${APP_CURRENT_VERSION}).`, 3500);
         if (statusEl) statusEl.textContent = `Estás al día con la última versión (${APP_CURRENT_VERSION}).`;
       } catch (err) {
         console.error('Error buscando actualizaciones:', err);
-        showToast('⚠️ No se pudo comprobar la actualización. Intenta de nuevo.', 3500);
+        showToast('No se pudo comprobar la actualización. Intenta de nuevo.', 3500);
         if (statusEl) statusEl.textContent = 'Error al consultar GitHub: ' + err.message;
       } finally {
         if (btn) btn.disabled = false;
@@ -1524,7 +1524,7 @@
     }
 
     async function forceCleanReload() {
-      showToast('🧹 Limpiando caché y recargando...', 3000);
+      showToast('Limpiando caché y recargando...', 3000);
       try {
         if ('caches' in window) {
           const keys = await caches.keys();
@@ -1554,7 +1554,7 @@
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                showToast('🚀 Nueva versión instalada. Actualizando...', 2500);
+                showToast('Nueva versión instalada. Actualizando...', 2500);
                 setTimeout(() => window.location.reload(), 1000);
               }
             });
