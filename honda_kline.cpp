@@ -537,6 +537,17 @@ bool HondaKLine::getActiveDTCs(std::vector<DtcCode>& activeCodes) {
     activeCodes.push_back(HONDA_DTC_TABLE[0]); // Code 1 (O2)
     activeCodes.push_back(HONDA_DTC_TABLE[9]); // Code 14 (IACV)
     data.dtcCount = (int)activeCodes.size();
+    diag.freezeFrame.valid = true;
+    diag.freezeFrame.rawEct  = 0x1D;
+    diag.freezeFrame.rawIat  = 0x57;
+    diag.freezeFrame.rawMap  = 0x6A;
+    diag.freezeFrame.rawBaro = 0x8D;
+    diag.freezeFrame.rawTps  = 0x18;
+    diag.freezeFrame.ect  = 94;
+    diag.freezeFrame.iat  = 53;
+    diag.freezeFrame.map  = 71;
+    diag.freezeFrame.baro = 96;
+    diag.freezeFrame.tps  = 0;
     return true;
   }
 
@@ -574,7 +585,7 @@ bool HondaKLine::getActiveDTCs(std::vector<DtcCode>& activeCodes) {
     }
   }
 
-  // Leer bloque extendido 0x60 (row 2: códigos 64 a 95 como P0420, Misfires 71-74, EVAP 90-92)
+  // Leer bloque extendido 0x60 (row 2: códigos 64 a 67 y Freeze Frame de sensores)
   if (readMemory(0x60, 0x10, d)) {
     snprintf(diag.dtcRawHex[2], sizeof(diag.dtcRawHex[2]),
              "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
@@ -582,7 +593,9 @@ bool HondaKLine::getActiveDTCs(std::vector<DtcCode>& activeCodes) {
              d[8], d[9], d[10], d[11], d[12], d[13], d[14], d[15]);
     logHex("DTC60", d, 16);
 
-    for (int i = 0; i < 16; i++) {
+    // En ECU Honda P2P, los DTCs terminan en 0x61 (i < 2: códigos 64 a 67).
+    // A partir de 0x62 (i >= 2) residen los registros del Freeze Frame (sensores ECT, IAT, MAP, BARO, TPS).
+    for (int i = 0; i < 2; i++) {
       if (d[i] == 0x00 || d[i] == 0xFF) continue;
       int baseCode = 64 + i * 2;
       if ((d[i] >> 4) && isKnownDtc(baseCode)) {
@@ -591,6 +604,35 @@ bool HondaKLine::getActiveDTCs(std::vector<DtcCode>& activeCodes) {
       if ((d[i] & 0x0F) && isKnownDtc(baseCode + 1)) {
         pushDtc(activeCodes, baseCode + 1);
       }
+    }
+
+    // Decodificar Freeze Frame si hay datos válidos grabados (0x64 a 0x68)
+    uint8_t rawEct  = d[4]; // 0x64
+    uint8_t rawIat  = d[5]; // 0x65
+    uint8_t rawMap  = d[6]; // 0x66
+    uint8_t rawBaro = d[7]; // 0x67
+    uint8_t rawTps  = d[8]; // 0x68
+
+    if (rawEct != 0x00 && rawEct != 0xFF && rawMap != 0x00 && rawMap != 0xFF) {
+      diag.freezeFrame.valid = true;
+      diag.freezeFrame.rawEct  = rawEct;
+      diag.freezeFrame.rawIat  = rawIat;
+      diag.freezeFrame.rawMap  = rawMap;
+      diag.freezeFrame.rawBaro = rawBaro;
+      diag.freezeFrame.rawTps  = rawTps;
+      diag.freezeFrame.ect  = calculateHondaTemp(rawEct);
+      diag.freezeFrame.iat  = calculateHondaTemp(rawIat);
+      diag.freezeFrame.map  = (int)roundf(rawMap * 0.716f - 5.0f);
+      if (diag.freezeFrame.map < 0) diag.freezeFrame.map = 0;
+      diag.freezeFrame.baro = (int)roundf(rawBaro * 0.716f - 5.0f);
+      diag.freezeFrame.tps  = constrain(((int)rawTps - 24) / 2, 0, 100);
+
+      klog("FreezeFrame ECU: ECT=%d°C IAT=%d°C MAP=%dkPa BARO=%dkPa TPS=%d%% (Raw: %02X %02X %02X %02X %02X)",
+           diag.freezeFrame.ect, diag.freezeFrame.iat, diag.freezeFrame.map,
+           diag.freezeFrame.baro, diag.freezeFrame.tps,
+           rawEct, rawIat, rawMap, rawBaro, rawTps);
+    } else {
+      diag.freezeFrame.valid = false;
     }
   }
 
@@ -602,6 +644,7 @@ bool HondaKLine::getActiveDTCs(std::vector<DtcCode>& activeCodes) {
 // Clear DTC codes (reset ECU): 21 04 01 DA  ->  01 03 FC
 // ============================================================================
 bool HondaKLine::clearDTCs() {
+  diag.freezeFrame = FreezeFrame();
   if (data.demo) {
     data.dtcCount = 0;
     data.mil = false;

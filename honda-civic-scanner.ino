@@ -90,7 +90,24 @@ void handlePendingCmd(PendingCmd cmd) {
       std::vector<DtcCode> codes;
       bool ok = honda.getActiveDTCs(codes);
       if (ok) {
-        String json = "{\"type\":\"dtc\",\"ok\":true,\"mil\":" + String(honda.data.mil ? "true" : "false") + ",\"codes\":[";
+        String json = "{\"type\":\"dtc\",\"ok\":true,\"mil\":" + String(honda.data.mil ? "true" : "false");
+        if (honda.diag.freezeFrame.valid) {
+          char ffBuf[160];
+          snprintf(ffBuf, sizeof(ffBuf),
+                   ",\"freezeFrame\":{\"ect\":%d,\"iat\":%d,\"map\":%d,\"baro\":%d,\"tps\":%d,\"rawHex\":\"%02X %02X %02X %02X %02X\"}",
+                   honda.diag.freezeFrame.ect,
+                   honda.diag.freezeFrame.iat,
+                   honda.diag.freezeFrame.map,
+                   honda.diag.freezeFrame.baro,
+                   honda.diag.freezeFrame.tps,
+                   honda.diag.freezeFrame.rawEct,
+                   honda.diag.freezeFrame.rawIat,
+                   honda.diag.freezeFrame.rawMap,
+                   honda.diag.freezeFrame.rawBaro,
+                   honda.diag.freezeFrame.rawTps);
+          json += ffBuf;
+        }
+        json += ",\"codes\":[";
         for (size_t i = 0; i < codes.size(); i++) {
           json += "{\"code\":" + String(codes[i].code) + ",";
           json += "\"name\":\"" + String(codes[i].name) + "\",";

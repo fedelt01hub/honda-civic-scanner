@@ -66,6 +66,20 @@ struct TelemetryData {
   unsigned long lastSuccessTime = 0;
 };
 
+struct FreezeFrame {
+  bool valid = false;
+  int ect = 0;          // °C (0x64)
+  int iat = 0;          // °C (0x65)
+  int map = 0;          // kPa (0x66)
+  int baro = 0;         // kPa (0x67)
+  int tps = 0;          // % (0x68)
+  uint8_t rawEct = 0;
+  uint8_t rawIat = 0;
+  uint8_t rawMap = 0;
+  uint8_t rawBaro = 0;
+  uint8_t rawTps = 0;
+};
+
 struct DiagInfo {
   KLineState state = KLINE_IDLE;
   int initAttempts = 0;
@@ -89,6 +103,7 @@ struct DiagInfo {
   char row2Hex[64] = "";
   char row3Hex[64] = "";
   char dtcRawHex[3][64] = {"", "", ""};
+  FreezeFrame freezeFrame;
   uint8_t rawEldByte = 0;
   uint8_t rawO2SecByte = 0;
   uint8_t d8Byte = 0;
