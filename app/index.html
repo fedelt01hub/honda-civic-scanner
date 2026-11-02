@@ -105,11 +105,54 @@
       background: rgba(0, 240, 255, 0.15);
       border: 1px solid rgba(0, 240, 255, 0.35);
       color: var(--primary);
-      padding: 2px 6px;
+      padding: 2px 7px;
       border-radius: 6px;
       font-weight: 800;
       letter-spacing: 0.5px;
       margin-left: 4px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .brand-version:hover {
+      background: rgba(0, 240, 255, 0.3);
+      box-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+    }
+    .brand-version:active {
+      transform: scale(0.93);
+    }
+
+    /* Toast Notificación */
+    .toast-notify {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: rgba(18, 24, 38, 0.96);
+      border: 1px solid var(--primary);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 240, 255, 0.3);
+      border-radius: 12px;
+      padding: 12px 18px;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 10000;
+      transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.3s ease;
+      opacity: 0;
+      pointer-events: none;
+      max-width: 90vw;
+      text-align: center;
+    }
+    .toast-notify.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
     }
 
     .btn-connect {
@@ -851,7 +894,7 @@
     <div class="brand">
       <img src="icon-192.png" class="brand-logo" alt="Civic OBD">
       <div>
-        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD2</span> <span class="brand-version">v24</span></div>
+        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD2</span> <span class="brand-version" id="brandVersionBadge" onclick="checkAppUpdatesManually()" title="Tocar para buscar actualizaciones">v24 🔄</span></div>
       </div>
     </div>
     <button id="btnConnect" class="btn-connect" onclick="toggleBleConnection()">
@@ -1308,6 +1351,26 @@
         Cambiar Fórmula RPM (OBD1 / OBD2)
       </button>
     </div>
+
+    <!-- Card de Gestión de Actualizaciones PWA -->
+    <div class="grid-title">Actualizaciones de la App PWA</div>
+    <div class="sensor-card" style="margin-bottom: 14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span style="font-size:0.85rem; font-weight:700; color:var(--text);">Versión Instalada</span>
+        <span id="pwaVersionTag" style="font-size:0.75rem; color:var(--primary); font-weight:800; background:rgba(0,240,255,0.15); border:1px solid rgba(0,240,255,0.4); padding:3px 9px; border-radius:6px;">v24</span>
+      </div>
+      <div id="updateStatusText" style="font-size:0.78rem; color:var(--text-dim); margin-bottom:12px; line-height:1.4;">
+        Esta app funciona 100% offline. Toca el botón para verificar con GitHub si hay una nueva versión disponible.
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button id="btnCheckUpdateManual" class="btn-action" style="flex:1; min-width:140px; margin:0; background:rgba(0,240,255,0.15); border:1px solid var(--primary); color:var(--primary);" onclick="checkAppUpdatesManually()">
+          🔄 Buscar Actualización
+        </button>
+        <button class="btn-action" style="flex:1; min-width:140px; margin:0; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:var(--text);" onclick="forceCleanReload()">
+          🧹 Limpiar Caché y Recargar
+        </button>
+      </div>
+    </div>
   </main>
 
   <!-- Bottom Navigation -->
@@ -1381,6 +1444,106 @@
     let lastVssTimestamp = 0;
 
     // =========================================================================
+    // SISTEMA DE ACTUALIZACIÓN MANUAL Y GESTIÓN DE CACHÉ PWA
+    // =========================================================================
+    const APP_CURRENT_VERSION = 'v24';
+    let toastTimeout = null;
+
+    function showToast(msg, duration = 3200) {
+      let toast = document.getElementById('appToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'appToast';
+        toast.className = 'toast-notify';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+      }, duration);
+    }
+
+    async function checkAppUpdatesManually() {
+      const statusEl = document.getElementById('updateStatusText');
+      const btn = document.getElementById('btnCheckUpdateManual');
+      if (btn) btn.disabled = true;
+
+      showToast('🔍 Verificando nuevas versiones en GitHub...', 3000);
+      if (statusEl) statusEl.textContent = 'Verificando con GitHub...';
+
+      if (!navigator.onLine) {
+        showToast('⚠️ Sin conexión a Internet. Conéctate a WiFi o datos.', 4000);
+        if (statusEl) statusEl.textContent = 'Sin conexión a Internet. Conéctate a WiFi o datos móviles.';
+        if (btn) btn.disabled = false;
+        return;
+      }
+
+      try {
+        // Consultar directamente sw.js en el servidor saltando la caché local del navegador
+        const res = await fetch('./sw.js?_check=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok) throw new Error('No se pudo contactar al servidor.');
+        const content = await res.text();
+        const match = content.match(/CACHE_NAME\s*=\s*['"]([^'"]+)['"]/);
+        const serverVersion = match ? match[1].replace('civic-obd-', '') : null;
+
+        if (serverVersion && serverVersion !== APP_CURRENT_VERSION) {
+          showToast(`🚀 ¡Nueva versión disponible (${serverVersion})! Actualizando...`, 4000);
+          if (statusEl) statusEl.textContent = `¡Nueva versión encontrada (${serverVersion})! Descargando...`;
+          setTimeout(() => {
+            forceCleanReload();
+          }, 1200);
+          return;
+        }
+
+        // Si la versión en el servidor coincide con la actual:
+        if ('serviceWorker' in navigator) {
+          const reg = await navigator.serviceWorker.getRegistration();
+          if (reg) {
+            await reg.update();
+            if (reg.waiting) {
+              showToast('🚀 Actualización lista. Recargando...', 2000);
+              setTimeout(() => {
+                forceCleanReload();
+              }, 1000);
+              return;
+            }
+          }
+        }
+
+        showToast(`✅ ¡Ya tienes la versión más reciente (${APP_CURRENT_VERSION})!`, 3500);
+        if (statusEl) statusEl.textContent = `Estás al día con la última versión (${APP_CURRENT_VERSION}).`;
+      } catch (err) {
+        console.error('Error buscando actualizaciones:', err);
+        showToast('⚠️ No se pudo comprobar la actualización. Intenta de nuevo.', 3500);
+        if (statusEl) statusEl.textContent = 'Error al consultar GitHub: ' + err.message;
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    async function forceCleanReload() {
+      showToast('🧹 Limpiando caché y recargando...', 3000);
+      try {
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          for (const r of regs) {
+            await r.unregister();
+          }
+        }
+      } catch (e) {
+        console.warn('Error limpiando caché:', e);
+      }
+      // Redirigir con parámetro aleatorio para obligar al navegador a pedir los archivos limpios
+      window.location.href = window.location.origin + window.location.pathname + '?_ts=' + Date.now();
+    }
+
+    // =========================================================================
     // SERVICE WORKER & PWA INSTALL
     // =========================================================================
     if ('serviceWorker' in navigator) {
@@ -1391,8 +1554,8 @@
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('Nueva versión lista, actualizando...');
-                window.location.reload();
+                showToast('🚀 Nueva versión instalada. Actualizando...', 2500);
+                setTimeout(() => window.location.reload(), 1000);
               }
             });
           }
