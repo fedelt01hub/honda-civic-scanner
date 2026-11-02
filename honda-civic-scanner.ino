@@ -7,7 +7,7 @@
  * Protocolo: Honda 3-Pin DLC (9600 Baud, 8N1, Half-Duplex, 20 05 ADDR LEN CS)
  *
  * Anuncia el servicio estándar Nordic UART Service (NUS) como 'Civic99-OBD'
- * y transmite telemetría en tiempo real a 20 Hz (paquetes binarios de 28 bytes)
+ * y transmite telemetría en tiempo real a 20 Hz (paquetes binarios de 29 bytes)
  * hacia la aplicación móvil PWA / Web Bluetooth.
  * ==============================================================================
  */
@@ -270,16 +270,16 @@ void setup() {
   honda.sendInit();
 }
 
-// Empaquetar y notificar la trama binaria de telemetría (28 bytes)
+// Empaquetar y notificar la trama binaria de telemetría (29 bytes)
 void sendTelemetryFrame() {
   if (!deviceConnected || !pTxCharacteristic) return;
 
   const TelemetryData &d = honda.data;
-  uint8_t frame[28];
+  uint8_t frame[29];
 
   frame[0] = 0xA5; // Byte de sincronización 1
   frame[1] = 0x5A; // Byte de sincronización 2
-  frame[2] = 28;   // Longitud de la trama
+  frame[2] = 29;   // Longitud de la trama
 
   // RPM (uint16_t, Big-Endian)
   frame[3] = (uint8_t)(d.rpm >> 8);
@@ -312,7 +312,7 @@ void sendTelemetryFrame() {
   // TPS (% de apertura)
   frame[12] = (uint8_t)d.tps;
 
-  // Sensor de Oxígeno O2 (Voltios * 100, ej: 0.85V -> 85)
+  // Sensor de Oxígeno O2 Primario (Voltios * 100, ej: 0.85V -> 85)
   frame[13] = (uint8_t)constrain((int)(d.o2 * 100.0f), 0, 255);
 
   // Batería (Voltios * 10, ej: 13.8V -> 138)
@@ -350,12 +350,15 @@ void sendTelemetryFrame() {
   // Cantidad de códigos de falla DTC activos
   frame[26] = (uint8_t)d.dtcCount;
 
-  // Checksum XOR de bytes [2..26]
+  // Sensor de Oxígeno O2 Secundario (Voltios * 100, ej: 0.65V -> 65)
+  frame[27] = (uint8_t)constrain((int)(d.o2Sec * 100.0f), 0, 255);
+
+  // Checksum XOR de bytes [2..27]
   uint8_t cs = 0;
-  for (int i = 2; i < 27; i++) {
+  for (int i = 2; i < 28; i++) {
     cs ^= frame[i];
   }
-  frame[27] = cs;
+  frame[28] = cs;
 
   pTxCharacteristic->setValue(frame, sizeof(frame));
   pTxCharacteristic->notify();

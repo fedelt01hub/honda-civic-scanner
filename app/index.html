@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Civic OBD v23 - Escáner & Datalogger</title>
+  <title>Civic OBD v24 - Escáner & Datalogger</title>
   
   <!-- Cache Control (Evita que el navegador retenga versiones viejas al recargar) -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -851,7 +851,7 @@
     <div class="brand">
       <img src="icon-192.png" class="brand-logo" alt="Civic OBD">
       <div>
-        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD2</span> <span class="brand-version">v23</span></div>
+        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD2</span> <span class="brand-version">v24</span></div>
       </div>
     </div>
     <button id="btnConnect" class="btn-connect" onclick="toggleBleConnection()">
@@ -1167,9 +1167,17 @@
       </div>
 
       <div class="sensor-card">
-        <div class="sensor-label">Sensor O2 Primario</div>
+        <div class="sensor-label">Sensor O2 Primario (S1)</div>
         <div class="sensor-val-wrap">
           <span id="valO2" class="sensor-val">0.00</span>
+          <span class="sensor-unit">V</span>
+        </div>
+      </div>
+
+      <div class="sensor-card">
+        <div class="sensor-label">Sensor O2 Secundario (S2)</div>
+        <div class="sensor-val-wrap">
+          <span id="valO2Sec" class="sensor-val">0.00</span>
           <span class="sensor-unit">V</span>
         </div>
       </div>
@@ -1287,7 +1295,7 @@
     <div class="sensor-card" style="margin-bottom: 12px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
         <span style="font-size:0.75rem; color:var(--text-dim); font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Estadísticas K-Line</span>
-        <span style="font-size:0.7rem; color:var(--primary); font-weight:800; background:rgba(0,240,255,0.12); border:1px solid rgba(0,240,255,0.3); padding:2px 7px; border-radius:4px;">App PWA v22</span>
+        <span style="font-size:0.7rem; color:var(--primary); font-weight:800; background:rgba(0,240,255,0.12); border:1px solid rgba(0,240,255,0.3); padding:2px 7px; border-radius:4px;">App PWA v24</span>
       </div>
       <div style="font-size:0.8rem; line-height: 1.6;" id="diagStatsText">
         Tramas Enviadas: 0 | Válidas: 0 | CRC Error: 0 | Timeouts: 0
@@ -1348,7 +1356,7 @@
     let currentData = {
       rpm: 0, vss: 0, vtec: false, ac: false, brake: false, pn: false,
       connected: false, demo: false, gear: 0, ect: 0, iat: 0, map: 0,
-      mapInHg: 0, baro: 0, tps: 0, o2: 0, batt: 0, altFr: 0, eld: 0,
+      mapInHg: 0, baro: 0, tps: 0, o2: 0, o2Sec: 0, batt: 0, altFr: 0, eld: 0,
       ign: 0, inj: 0, sft: 0, lft: 0, iacv: 0, knock: 0, maf: 0, dtcCount: 0
     };
     let ecuType = 2;
@@ -1571,14 +1579,17 @@
 
       const firstByte = value.getUint8(0);
 
-      // Trama Binaria de 28 bytes: Header 0xA5 0x5A 0x1C
+      // Trama Binaria (28 o 29 bytes): Header 0xA5 0x5A
       if (firstByte === 0xA5 && value.byteLength >= 28) {
-        if (value.getUint8(1) !== 0x5A || value.getUint8(2) !== 28) return;
+        if (value.getUint8(1) !== 0x5A) return;
+        const frameLen = value.getUint8(2);
+        if (frameLen !== 28 && frameLen !== 29) return;
+        if (value.byteLength < frameLen) return;
 
-        // Validar Checksum XOR (bytes 2 a 26)
+        // Validar Checksum XOR (bytes 2 a frameLen-2)
         let cs = 0;
-        for (let i = 2; i < 27; i++) cs ^= value.getUint8(i);
-        if (cs !== value.getUint8(27)) {
+        for (let i = 2; i < frameLen - 1; i++) cs ^= value.getUint8(i);
+        if (cs !== value.getUint8(frameLen - 1)) {
           console.warn('BLE Checksum mismatch!');
           return;
         }
@@ -1605,6 +1616,7 @@
         const knock = value.getUint8(23);
         const maf = (((value.getUint8(24) << 8) | value.getUint8(25)) / 10.0);
         const dtcCount = value.getUint8(26);
+        const o2Sec = frameLen >= 29 ? (value.getUint8(27) / 100.0) : 0.0;
 
         // Vacío inHg = (Baro - MAP) * 0.2953
         const mapInHg = Math.max(0, (baro - map) * 0.2953);
@@ -1619,7 +1631,7 @@
           demo: !!(flags & 0x20),
           mil: !!(flags & 0x40),
           gear, ect, iat, map, mapInHg, baro, tps,
-          o2, batt, altFr, eld, ign, inj, sft, lft,
+          o2, o2Sec, batt, altFr, eld, ign, inj, sft, lft,
           iacv, knock, maf, dtcCount
         };
 
@@ -1836,6 +1848,7 @@
       setTxt('valInj', d.inj.toFixed(2));
       setTxt('valIgn', d.ign.toFixed(1));
       setTxt('valO2', d.o2.toFixed(2));
+      setTxt('valO2Sec', (d.o2Sec !== undefined ? d.o2Sec : 0).toFixed(2));
       setTxt('valTrim', `${d.sft}% / ${d.lft}%`);
       } catch (err) {
         console.error('Error actualizando Dashboard UI:', err);
@@ -1915,6 +1928,7 @@
         d.ect,
         d.iat,
         d.o2.toFixed(2),
+        (d.o2Sec !== undefined ? d.o2Sec : 0).toFixed(2),
         d.batt.toFixed(1),
         d.ign.toFixed(1),
         d.inj.toFixed(2),
@@ -1937,7 +1951,7 @@
     function exportCsv() {
       if (recordedRows.length === 0) return;
 
-      const header = "Timestamp_ms,RPM,VSS_kmh,TPS_pct,MAP_kPa,Vacuum_inHg,ECT_C,IAT_C,O2_V,Batt_V,IGN_deg,INJ_ms,SFT_pct,LFT_pct,VTEC,AC_Clutch,Brake,Gear,ELD_A,IACV_pct,MAF_gs,Baro_kPa,Knock\n";
+      const header = "Timestamp_ms,RPM,VSS_kmh,TPS_pct,MAP_kPa,Vacuum_inHg,ECT_C,IAT_C,O2_V,O2_Sec_V,Batt_V,IGN_deg,INJ_ms,SFT_pct,LFT_pct,VTEC,AC_Clutch,Brake,Gear,ELD_A,IACV_pct,MAF_gs,Baro_kPa,Knock\n";
       const csvContent = header + recordedRows.map(r => r.join(',')).join('\n');
 
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
