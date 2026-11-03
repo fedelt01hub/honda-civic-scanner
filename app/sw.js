@@ -1,4 +1,4 @@
-const CACHE_NAME = 'civic-obd-v26';
+const CACHE_NAME = 'civic-obd-v27';
 const ASSETS = [
   './',
   './index.html',
@@ -6,7 +6,8 @@ const ASSETS = [
   './icon-192.png',
   './icon-512.png',
   './icon.png',
-  './icon.svg'
+  './icon.svg',
+  './fonts/ChakraPetch-BoldItalic.woff2'
 ];
 
 self.addEventListener('install', (event) => {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Civic OBD v26 - Escáner & Datalogger</title>
+  <title>Civic OBD v27 - Escáner & Datalogger</title>
   
   <!-- Cache Control (Evita que el navegador retenga versiones viejas al recargar) -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -15,15 +15,20 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Civic OBD">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@1,700;1,900&display=swap" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@1,700;1,900&display=swap"></noscript>
+  <link rel="preload" href="fonts/ChakraPetch-BoldItalic.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <style>
+    @font-face {
+      font-family: 'Chakra Petch';
+      font-style: italic;
+      font-weight: 700;
+      font-display: swap;
+      src: url('fonts/ChakraPetch-BoldItalic.woff2') format('woff2');
+    }
+
     :root {
       --bg: #0a0d14;
       --card-bg: rgba(19, 25, 36, 0.85);
@@ -38,6 +43,11 @@
       --ac-color: #00e5ff;
       --ac-glow: rgba(0, 229, 255, 0.4);
       --amber: #ffb300;
+      /* Semáforo de rangos */
+      --ok: #00e676;
+      --warn: #ffb300;
+      --crit: #ff2d55;
+      --cold: #00b4d8;
       --card-radius: 16px;
       --safe-bottom: env(safe-area-inset-bottom, 12px);
     }
@@ -111,19 +121,9 @@
       font-weight: 800;
       letter-spacing: 0.5px;
       margin-left: 4px;
-      cursor: pointer;
-      user-select: none;
-      transition: all 0.2s ease;
       display: inline-flex;
       align-items: center;
       gap: 3px;
-    }
-    .brand-version:hover {
-      background: rgba(0, 240, 255, 0.3);
-      box-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
-    }
-    .brand-version:active {
-      transform: scale(0.93);
     }
 
     /* Toast Notificación */
@@ -150,6 +150,9 @@
       max-width: 90vw;
       text-align: center;
     }
+    .toast-notify.toast-ok { border-color: var(--ok); box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 15px rgba(0,230,118,0.3); }
+    .toast-notify.toast-warn { border-color: var(--warn); box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 15px rgba(255,179,0,0.3); }
+    .toast-notify.toast-error { border-color: var(--crit); box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 15px rgba(255,45,85,0.35); }
     .toast-notify.show {
       transform: translateX(-50%) translateY(0);
       opacity: 1;
@@ -288,12 +291,6 @@
       animation: pulseVtec 0.8s infinite alternate;
     }
 
-    .nav-clean-icon {
-      font-size: 0.9rem;
-      font-weight: 800;
-      letter-spacing: 1px;
-    }
-
     /* =========================================================================
      * TRIPLE CLUSTER POD STYLES (RPM - KM/H CENTRO - TEMP)
      * ========================================================================= */
@@ -367,8 +364,8 @@
 
     .pod-val-side {
       font-family: 'Chakra Petch', monospace;
-      font-size: clamp(1.4rem, 4.8vw, 2.1rem);
-      font-weight: 800;
+      font-size: clamp(1.1rem, 4.4vw, 2.1rem);
+      font-weight: 700;
       color: #fff;
       line-height: 1;
       font-variant-numeric: tabular-nums;
@@ -378,7 +375,7 @@
     .pod-val-center {
       font-family: 'Chakra Petch', monospace;
       font-size: clamp(2.7rem, 9.5vw, 4.2rem);
-      font-weight: 900;
+      font-weight: 700;
       color: #fff;
       line-height: 0.9;
       letter-spacing: -1px;
@@ -387,7 +384,7 @@
     }
 
     .pod-unit-lbl {
-      font-size: clamp(0.56rem, 1.8vw, 0.7rem);
+      font-size: clamp(0.65rem, 2vw, 0.78rem);
       font-weight: 800;
       color: var(--text-dim);
       letter-spacing: 1.2px;
@@ -400,21 +397,21 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
       padding: 0 4px;
       margin-bottom: 12px;
       flex-wrap: wrap;
     }
 
     .warn-badge {
-      padding: 4px 8px;
-      border-radius: 7px;
-      font-size: 0.62rem;
+      padding: 6px 8px;
+      border-radius: 8px;
+      font-size: clamp(0.66rem, 2.6vw, 0.75rem);
       font-weight: 800;
       letter-spacing: 0.5px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: rgba(255, 255, 255, 0.28);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: rgba(255, 255, 255, 0.45);
       transition: all 0.2s ease;
       display: inline-flex;
       align-items: center;
@@ -458,7 +455,7 @@
 
     /* Sensor Grid - Compacto */
     .grid-title {
-      font-size: 0.65rem;
+      font-size: 0.75rem;
       font-weight: 800;
       letter-spacing: 0.8px;
       color: var(--text-dim);
@@ -474,11 +471,12 @@
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 12px;
-      padding: 8px 11px;
+      padding: 10px 12px;
       position: relative;
+      transition: border-color 0.3s ease, background 0.3s ease;
     }
     .sensor-label {
-      font-size: 0.64rem;
+      font-size: 0.75rem;
       color: var(--text-dim);
       font-weight: 600;
       line-height: 1.15;
@@ -490,14 +488,14 @@
       margin-top: 2px;
     }
     .sensor-val {
-      font-size: 1.18rem;
+      font-size: 1.45rem;
       font-weight: 800;
       color: #fff;
       font-variant-numeric: tabular-nums;
       line-height: 1.1;
     }
     .sensor-unit {
-      font-size: 0.65rem;
+      font-size: 0.75rem;
       color: var(--text-dim);
       font-weight: 600;
     }
@@ -511,11 +509,36 @@
     }
     .sensor-bar-fill {
       height: 100%;
-      background: var(--accent);
+      background: var(--primary);
       border-radius: 2px;
       width: 0%;
-      transition: width 0.1s linear;
+      transition: width 0.1s linear, background 0.3s ease;
     }
+    .sensor-sub {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* Semáforo: data-level en .sensor-card */
+    .sensor-card[data-level="ok"] .sensor-val { color: var(--ok); }
+    .sensor-card[data-level="cold"] .sensor-val { color: var(--cold); }
+    .sensor-card[data-level="cold"] .sensor-bar-fill { background: var(--cold); }
+    .sensor-card[data-level="warn"] { border-color: rgba(255, 179, 0, 0.55); background: rgba(255, 179, 0, 0.08); }
+    .sensor-card[data-level="warn"] .sensor-val,
+    .sensor-card[data-level="warn"] .sensor-sub { color: var(--warn); }
+    .sensor-card[data-level="warn"] .sensor-bar-fill { background: var(--warn); }
+    .sensor-card[data-level="crit"] { border-color: var(--crit); background: rgba(255, 45, 85, 0.12); animation: critPulse 1s infinite alternate; }
+    .sensor-card[data-level="crit"] .sensor-val,
+    .sensor-card[data-level="crit"] .sensor-sub { color: var(--crit); }
+    .sensor-card[data-level="crit"] .sensor-bar-fill { background: var(--crit); }
+    @keyframes critPulse {
+      from { box-shadow: 0 0 0 rgba(255, 45, 85, 0); }
+      to { box-shadow: 0 0 14px rgba(255, 45, 85, 0.45); }
+    }
+    .pod-val-side.lvl-warn { color: var(--warn); text-shadow: 0 0 12px rgba(255, 179, 0, 0.5); }
+    .pod-val-side.lvl-crit { color: var(--crit); text-shadow: 0 0 14px rgba(255, 45, 85, 0.7); }
+    .pod-val-side.lvl-cold { color: var(--cold); }
 
     /* Datalogger View */
     .datalogger-card {
@@ -669,6 +692,7 @@
       gap: 10px;
       margin: 12px 0;
     }
+    .dtc-card, .dtc-lib-item { user-select: text; }
     .dtc-card {
       background: var(--card-bg);
       border: 1px solid rgba(255, 45, 85, 0.3);
@@ -849,6 +873,36 @@
       gap: 8px;
     }
 
+    .btn-action:disabled { opacity: 0.5; }
+    .btn-primary { background: rgba(0, 230, 118, 0.15); border-color: rgba(0, 230, 118, 0.4); color: var(--vtec); }
+    .btn-danger { background: rgba(255, 45, 85, 0.15); border-color: rgba(255, 45, 85, 0.4); color: var(--accent); }
+    .btn-info { background: rgba(0, 240, 255, 0.15); border-color: var(--primary); color: var(--primary); }
+    .btn-ghost { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.15); color: var(--text); }
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-row .btn-action { flex: 1; min-width: 140px; margin: 0; }
+    .badge-version {
+      font-size: 0.75rem;
+      color: var(--primary);
+      font-weight: 800;
+      background: rgba(0, 240, 255, 0.15);
+      border: 1px solid rgba(0, 240, 255, 0.4);
+      padding: 3px 9px;
+      border-radius: 6px;
+    }
+    .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+    .card-sub { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 14px; }
+    .sub-heading {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .sub-block { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--card-border); }
+    .sub-block-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .rec-btn.offline { opacity: 0.6; }
+    .rec-hint { font-size: 0.75rem; color: var(--warn); margin-top: 8px; font-weight: 600; }
+
     /* Bottom Navigation Bar */
     .bottom-nav {
       position: fixed;
@@ -868,20 +922,38 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
       color: var(--text-dim);
-      text-decoration: none;
-      font-size: 0.68rem;
+      background: none;
+      border: none;
+      font: inherit;
+      font-size: 0.75rem;
       font-weight: 700;
       cursor: pointer;
-      padding: 4px 0;
+      padding: 6px 0 4px 0;
+      position: relative;
       transition: color 0.2s;
     }
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      top: -8px;
+      left: 25%;
+      right: 25%;
+      height: 3px;
+      border-radius: 0 0 3px 3px;
+      background: transparent;
+      transition: background 0.2s;
+    }
     .nav-item.active {
-      color: var(--accent);
+      color: var(--primary);
+    }
+    .nav-item.active::before {
+      background: var(--primary);
     }
     .nav-icon {
-      font-size: 1.25rem;
+      width: 24px;
+      height: 24px;
     }
 
     /* Modal */
@@ -940,7 +1012,7 @@
     <div class="brand">
       <img src="icon-192.png" class="brand-logo" alt="Civic OBD">
       <div>
-        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD2</span> <span class="brand-version" id="brandVersionBadge" onclick="checkAppUpdatesManually()" title="Buscar actualizaciones">v26</span></div>
+        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD2</span> <span class="brand-version" id="brandVersionBadge">v27</span></div>
       </div>
     </div>
     <button id="btnConnect" class="btn-connect" onclick="toggleBleConnection()">
@@ -1153,11 +1225,11 @@
       <div id="warnBrakeBadge" class="warn-badge">BRAKE</div>
       <div id="warnAcBadge" class="warn-badge">A/C</div>
       <div id="warnPnBadge" class="warn-badge">P/N</div>
-      <div id="pillLink" class="warn-badge" style="font-size: 0.65rem;">ECU: --</div>
+      <div id="pillLink" class="warn-badge">ECU --</div>
     </div>
 
     <!-- Section A: Motor & Marchas -->
-    <div class="grid-title">SECCIÓN A: Motor y Marchas</div>
+    <div class="grid-title">Motor</div>
     <div class="sensor-grid">
       <div class="sensor-card">
         <div class="sensor-label">Marcha (Transmisión)</div>
@@ -1186,20 +1258,20 @@
         <div class="sensor-bar-bg"><div id="barIacv" class="sensor-bar-fill"></div></div>
       </div>
 
-      <div class="sensor-card">
+      <div class="sensor-card" id="cardBaro">
         <div class="sensor-label">Presión Barométrica</div>
         <div class="sensor-val-wrap">
           <span id="valBaro" class="sensor-val">101</span>
           <span class="sensor-unit">kPa</span>
         </div>
-        <div style="font-size: 0.65rem; color: var(--text-dim); margin-top: 3px;" id="valKnock">Knock: 0</div>
+        <div class="sensor-sub" id="valKnock">Knock: 0</div>
       </div>
     </div>
 
     <!-- Section B: Admisión & Eléctricos -->
-    <div class="grid-title">SECCIÓN B: Presiones, Temp & Batería</div>
+    <div class="grid-title">Temperaturas, presiones y batería</div>
     <div class="sensor-grid">
-      <div class="sensor-card">
+      <div class="sensor-card" id="cardEct">
         <div class="sensor-label">Refrigerante (ECT)</div>
         <div class="sensor-val-wrap">
           <span id="valEct" class="sensor-val">--</span>
@@ -1208,7 +1280,7 @@
         <div class="sensor-bar-bg"><div id="barEct" class="sensor-bar-fill"></div></div>
       </div>
 
-      <div class="sensor-card">
+      <div class="sensor-card" id="cardIat">
         <div class="sensor-label">Aire Admisión (IAT)</div>
         <div class="sensor-val-wrap">
           <span id="valIat" class="sensor-val">--</span>
@@ -1223,21 +1295,21 @@
           <span id="valMap" class="sensor-val">0</span>
           <span class="sensor-unit">kPa</span>
         </div>
-        <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 4px;" id="valMapInHg">0.0 inHg Vac</div>
+        <div class="sensor-sub" id="valMapInHg">0.0 inHg Vac</div>
       </div>
 
-      <div class="sensor-card">
+      <div class="sensor-card" id="cardBatt">
         <div class="sensor-label">Batería (Voltaje)</div>
         <div class="sensor-val-wrap">
           <span id="valBatt" class="sensor-val">0.0</span>
           <span class="sensor-unit">V</span>
         </div>
-        <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 4px;" id="valEld">ELD: 0.0 A | ALT: 0%</div>
+        <div class="sensor-sub" id="valEld">ELD: 0.0 A | ALT: 0%</div>
       </div>
     </div>
 
     <!-- Section C: Inyección & Combustible -->
-    <div class="grid-title">SECCIÓN C: Combustible y Encendido</div>
+    <div class="grid-title">Combustible y encendido</div>
     <div class="sensor-grid">
       <div class="sensor-card">
         <div class="sensor-label">Tiempo Inyección</div>
@@ -1271,10 +1343,10 @@
         </div>
       </div>
 
-      <div class="sensor-card">
+      <div class="sensor-card" id="cardTrim">
         <div class="sensor-label">Ajuste Mezcla (SFT / LFT)</div>
         <div class="sensor-val-wrap">
-          <span id="valTrim" class="sensor-val" style="font-size:1.1rem;">0% / 0%</span>
+          <span id="valTrim" class="sensor-val" style="font-size:1.25rem;">0% / 0%</span>
         </div>
       </div>
     </div>
@@ -1283,10 +1355,11 @@
   <!-- TAB 2: DATALOGGER -->
   <main id="tabLogger" class="tab-content">
     <div class="datalogger-card">
-      <button id="btnRecord" class="rec-btn" onclick="toggleRecording()">
+      <button id="btnRecord" class="rec-btn offline" onclick="toggleRecording()">
         <span id="recDot" class="rec-dot-css"></span>
         <span id="recLabel">Iniciar Grabación</span>
       </button>
+      <div id="recHint" class="rec-hint">Sin conexión: conecta el Bluetooth para grabar datos reales.</div>
 
       <div class="rec-stats">
         <div class="rec-stat-box">
@@ -1341,14 +1414,14 @@
   <!-- TAB 3: DIAGNÓSTICO & DTC -->
   <main id="tabDiag" class="tab-content">
     <div class="datalogger-card">
-      <h3 style="font-size:1.05rem; margin-bottom: 6px;">Códigos de Falla OBD (DTC)</h3>
-      <p style="font-size:0.8rem; color:var(--text-dim); margin-bottom: 14px;">Lee la memoria de diagnóstico 0x40-0x6F de la ECU Honda</p>
+      <h3 class="card-title">Códigos de Falla (DTC)</h3>
+      <p class="card-sub">Lee la memoria de diagnóstico de la ECU Honda</p>
 
-      <button class="btn-action" style="background: rgba(0, 230, 118, 0.15); border-color: rgba(0, 230, 118, 0.4); color: var(--vtec);" onclick="fetchDtcs()">
+      <button class="btn-action btn-primary" onclick="fetchDtcs()">
         Escanear Códigos de Falla
       </button>
 
-      <button class="btn-action" style="background: rgba(255, 45, 85, 0.15); border-color: rgba(255, 45, 85, 0.4); color: var(--accent);" onclick="confirmClearDtcs()">
+      <button class="btn-action btn-danger" onclick="confirmClearDtcs()">
         Borrar Códigos (Reset ECU)
       </button>
     </div>
@@ -1379,60 +1452,68 @@
       </div>
     </div>
 
-    <!-- Consola de hardware -->
-    <div class="grid-title">Diagnóstico de Enlace Físico</div>
-    <div class="sensor-card" style="margin-bottom: 12px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-        <span style="font-size:0.75rem; color:var(--text-dim); font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Estadísticas K-Line</span>
-        <span style="font-size:0.7rem; color:var(--primary); font-weight:800; background:rgba(0,240,255,0.12); border:1px solid rgba(0,240,255,0.3); padding:2px 7px; border-radius:4px;">App PWA v26</span>
+    <!-- Avanzado: herramientas técnicas y actualizaciones -->
+    <div class="dtc-lib-card">
+      <div class="dtc-lib-header" onclick="toggleAdvanced()">
+        <span style="font-weight:700; font-size:0.95rem; color:#fff;">Avanzado</span>
+        <span id="advToggleIcon" style="color:var(--text-dim); font-size:0.85rem;">▼</span>
       </div>
-      <div style="font-size:0.8rem; line-height: 1.6;" id="diagStatsText">
-        Tramas Enviadas: 0 | Válidas: 0 | CRC Error: 0 | Timeouts: 0
-      </div>
-      <div id="diagRawHex"></div>
-      <button class="btn-action" style="margin-top: 10px;" onclick="sendBleCmd('ECHO')">
-        Probar Eco del Transceptor L9637D
-      </button>
-      <button class="btn-action" onclick="toggleEcuFormula()">
-        Cambiar Fórmula RPM (OBD1 / OBD2)
-      </button>
-    </div>
+      <div id="advBody" style="display:none; margin-top:12px;">
+        <div class="sub-block-head">
+          <span class="sub-heading">Enlace K-Line</span>
+        </div>
+        <div style="font-size:0.8rem; line-height: 1.6;" id="diagStatsText">
+          Tramas Enviadas: 0 | Válidas: 0 | CRC Error: 0 | Timeouts: 0
+        </div>
+        <div id="diagRawHex"></div>
+        <button class="btn-action" style="margin-top: 10px;" onclick="advCmd('ECHO')">
+          Probar Eco del Transceptor L9637D
+        </button>
+        <button class="btn-action" onclick="advCmd(null)">
+          Cambiar Fórmula RPM (OBD1 / OBD2)
+        </button>
 
-    <!-- Card de Gestión de Actualizaciones PWA -->
-    <div class="grid-title">Actualizaciones de la App PWA</div>
-    <div class="sensor-card" style="margin-bottom: 14px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <span style="font-size:0.85rem; font-weight:700; color:var(--text);">Versión Instalada</span>
-        <span id="pwaVersionTag" style="font-size:0.75rem; color:var(--primary); font-weight:800; background:rgba(0,240,255,0.15); border:1px solid rgba(0,240,255,0.4); padding:3px 9px; border-radius:6px;">v26</span>
-      </div>
-      <div id="updateStatusText" style="font-size:0.78rem; color:var(--text-dim); margin-bottom:12px; line-height:1.4;">
-        Esta app funciona 100% offline. Toca el botón para verificar con GitHub si hay una nueva versión disponible.
-      </div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <button id="btnCheckUpdateManual" class="btn-action" style="flex:1; min-width:140px; margin:0; background:rgba(0,240,255,0.15); border:1px solid var(--primary); color:var(--primary);" onclick="checkAppUpdatesManually()">
-          Buscar Actualización
-        </button>
-        <button class="btn-action" style="flex:1; min-width:140px; margin:0; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:var(--text);" onclick="forceCleanReload()">
-          Limpiar Caché y Recargar
-        </button>
+        <div class="sub-block">
+          <div class="sub-block-head">
+            <span class="sub-heading">Actualizaciones</span>
+            <span id="pwaVersionTag" class="badge-version">v27</span>
+          </div>
+          <div id="updateStatusText" style="font-size:0.78rem; color:var(--text-dim); margin-bottom:12px; line-height:1.4;">
+            Esta app funciona 100% offline. Toca el botón para verificar con GitHub si hay una nueva versión disponible.
+          </div>
+          <div class="btn-row">
+            <button id="btnCheckUpdateManual" class="btn-action btn-info" onclick="checkAppUpdatesManually()">
+              Buscar Actualización
+            </button>
+            <button class="btn-action btn-ghost" onclick="forceCleanReload()">
+              Limpiar Caché y Recargar
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </main>
 
   <!-- Bottom Navigation -->
   <nav class="bottom-nav">
-    <div class="nav-item active" onclick="switchTab('tabDashboard', this)">
-      <span class="nav-clean-icon">DASH</span>
+    <button type="button" class="nav-item active" onclick="switchTab('tabDashboard', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4.9 19a9 9 0 1 1 14.2 0"/><path d="M12 13l4-4"/><circle cx="12" cy="13" r="1.4" fill="currentColor"/>
+      </svg>
       <span>Dashboard</span>
-    </div>
-    <div class="nav-item" onclick="switchTab('tabLogger', this)">
-      <span class="nav-clean-icon">LOG</span>
+    </button>
+    <button type="button" class="nav-item" onclick="switchTab('tabLogger', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/>
+      </svg>
       <span>Datalogger</span>
-    </div>
-    <div class="nav-item" onclick="switchTab('tabDiag', this)">
-      <span class="nav-clean-icon">DIAG</span>
+    </button>
+    <button type="button" class="nav-item" onclick="switchTab('tabDiag', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L3.5 17.2a1.8 1.8 0 0 0 2.5 2.6l5.8-5.8a4 4 0 0 0 5.1-5.4l-2.4 2.4-2.3-.4-.4-2.3z"/>
+      </svg>
       <span>Diagnóstico</span>
-    </div>
+    </button>
   </nav>
 
   <!-- Clear DTC Confirmation Modal -->
@@ -1443,6 +1524,17 @@
       <div class="modal-actions">
         <button class="modal-btn" style="background: #2a3444; color: #fff;" onclick="closeModal()">Cancelar</button>
         <button class="modal-btn" style="background: var(--accent); color: #fff;" onclick="executeClearDtcs()">Borrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal informativo (reemplaza alert()) -->
+  <div id="infoModal" class="modal-overlay" onclick="if (event.target === this) closeInfoModal()">
+    <div class="modal-card">
+      <div id="infoModalTitle" class="modal-title"></div>
+      <div id="infoModalText" class="modal-text"></div>
+      <div class="modal-actions">
+        <button class="modal-btn" style="background: var(--primary); color: #0a0d14;" onclick="closeInfoModal()">Entendido</button>
       </div>
     </div>
   </div>
@@ -1492,17 +1584,18 @@
     // =========================================================================
     // SISTEMA DE ACTUALIZACIÓN MANUAL Y GESTIÓN DE CACHÉ PWA
     // =========================================================================
-    const APP_CURRENT_VERSION = 'v26';
+    const APP_CURRENT_VERSION = 'v27';
     let toastTimeout = null;
 
-    function showToast(msg, duration = 3200) {
+    function showToast(msg, duration = 3200, type = 'info') {
       let toast = document.getElementById('appToast');
       if (!toast) {
         toast = document.createElement('div');
         toast.id = 'appToast';
-        toast.className = 'toast-notify';
         document.body.appendChild(toast);
       }
+      toast.className = 'toast-notify' + (type !== 'info' ? ' toast-' + type : '');
+      void toast.offsetWidth; // reinicia la transición si ya estaba visible
       toast.textContent = msg;
       toast.classList.add('show');
       clearTimeout(toastTimeout);
@@ -1510,6 +1603,17 @@
         toast.classList.remove('show');
       }, duration);
     }
+
+    function showInfoModal(title, html) {
+      document.getElementById('infoModalTitle').textContent = title;
+      document.getElementById('infoModalText').innerHTML = html;
+      document.getElementById('infoModal').classList.add('active');
+    }
+    function closeInfoModal() {
+      document.getElementById('infoModal').classList.remove('active');
+    }
+
+    const NEED_BLE_MSG = 'Primero conéctate al escáner con el botón Bluetooth de arriba.';
 
     async function checkAppUpdatesManually() {
       const statusEl = document.getElementById('updateStatusText');
@@ -1690,7 +1794,7 @@
       }
       try {
         if (!navigator.bluetooth) {
-          alert('Tu navegador no soporta Web Bluetooth. Usa Google Chrome o Brave en Android, o la app Bluefy en iPhone.');
+          showInfoModal('Bluetooth no disponible', 'Tu navegador no soporta Web Bluetooth. Usa Google Chrome o Brave en Android, o la app Bluefy en iPhone.');
           return;
         }
 
@@ -1751,11 +1855,16 @@
         btn.classList.add('connected');
         text.textContent = 'Conectado';
         icon.className = 'status-dot-circle connected';
+        document.getElementById('btnRecord').classList.remove('offline');
+        document.getElementById('recHint').hidden = true;
       } else {
         btn.classList.remove('connected');
         text.textContent = 'Conectar BLE';
         icon.className = 'status-dot-circle';
-        document.getElementById('pillLink').textContent = 'ECU: OFF';
+        document.getElementById('pillLink').textContent = 'ECU OFF';
+        document.getElementById('btnRecord').classList.add('offline');
+        document.getElementById('recHint').hidden = false;
+        clearLevels();
       }
     }
 
@@ -1968,10 +2077,10 @@
             `;
           }
         } else if (msg.type === 'echo') {
-          alert(`Prueba de Eco de Hardware L9637D:\nEnviados: ${msg.sent}\nRecibidos: ${msg.rx}\nResultado OK: ${msg.ok}`);
+          showInfoModal('Eco del transceptor L9637D', `Enviados: <b>${msg.sent}</b><br>Recibidos: <b>${msg.rx}</b><br>Resultado OK: <b>${msg.ok}</b>`);
         } else if (msg.type === 'ecuType') {
           ecuType = msg.val;
-          alert(`Fórmula de RPM configurada a: OBD${ecuType}`);
+          showToast(`Fórmula de RPM configurada a OBD${ecuType}`, 3000, 'ok');
         }
       } catch (e) {
         console.error('Error parseando JSON BLE:', e);
@@ -2013,6 +2122,19 @@
       const valEctGauge = document.getElementById('valEctGauge');
       if (valEctGauge) valEctGauge.textContent = d.ect;
 
+      // Semáforo de rangos (solo con enlace real a la ECU)
+      if (d.connected) {
+        const ectLvl = levelOf(d.ect, [[60, 'cold'], [102, 'ok'], [108, 'warn']], 'crit');
+        setLevel('cardEct', ectLvl);
+        setPodLevel('valEctGauge', ectLvl === 'ok' ? null : ectLvl);
+        setPodLevel('valRpm', d.rpm >= 6800 ? 'crit' : null);
+        setLevel('cardBatt', d.batt < 11.8 ? 'crit' : d.batt < 12.4 ? 'warn' : d.batt <= 15.0 ? 'ok' : 'crit');
+        setLevel('cardIat', d.iat > 65 ? 'crit' : d.iat > 55 ? 'warn' : null);
+        setLevel('cardBaro', (d.knock || 0) > 0 ? 'warn' : null);
+        const trim = Math.max(Math.abs(d.sft || 0), Math.abs(d.lft || 0));
+        setLevel('cardTrim', trim > 25 ? 'crit' : trim > 15 ? 'warn' : null);
+      }
+
       // 4. Barra de Testigos / Warning Badges
       const isCelOn = d.mil || (d.dtcCount > 0);
       togglePill('warnCelBadge', isCelOn, 'active-cel');
@@ -2033,10 +2155,10 @@
       const linkPill = document.getElementById('pillLink');
       if (linkPill) {
         if (d.connected) {
-          linkPill.textContent = d.demo ? 'ECU: DEMO' : 'ECU: LINK OK';
+          linkPill.textContent = d.demo ? 'ECU DEMO' : 'ECU OK';
           linkPill.style.color = 'var(--vtec)';
         } else {
-          linkPill.textContent = 'ECU: BUSCANDO';
+          linkPill.textContent = 'ECU BUSCANDO';
           linkPill.style.color = 'var(--amber)';
         }
       }
@@ -2068,6 +2190,29 @@
       } catch (err) {
         console.error('Error actualizando Dashboard UI:', err);
       }
+    }
+
+    // Devuelve el nivel del primer umbral que el valor no alcanza; si supera todos, `top`.
+    function levelOf(val, steps, top) {
+      for (const [limit, lvl] of steps) if (val < limit) return lvl;
+      return top;
+    }
+    function setLevel(id, lvl) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (lvl) { if (el.dataset.level !== lvl) el.dataset.level = lvl; }
+      else if (el.dataset.level) delete el.dataset.level;
+    }
+    function setPodLevel(id, lvl) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('lvl-warn', 'lvl-crit', 'lvl-cold');
+      if (lvl) el.classList.add('lvl-' + lvl);
+    }
+    function clearLevels() {
+      ['cardEct', 'cardBatt', 'cardIat', 'cardBaro', 'cardTrim'].forEach(id => setLevel(id, null));
+      setPodLevel('valEctGauge', null);
+      setPodLevel('valRpm', null);
     }
 
     function togglePill(id, active, activeClass) {
@@ -2300,7 +2445,7 @@
     // =========================================================================
     function fetchDtcs() {
       if (!isConnected) {
-        alert('⚠️ Primero debes conectarte al escáner por Bluetooth con el botón superior.');
+        showToast(NEED_BLE_MSG, 3500, 'warn');
         return;
       }
       bleCmdQueue.length = 0; // Limpiar GET_DIAG pendientes para prioridad inmediata
@@ -2411,14 +2556,14 @@
     function handleClearDtcResponse(msg) {
       if (msg.ack) {
         if (msg.verifyOk && msg.remaining === 0 && !msg.mil) {
-          alert('¡Códigos borrados y confirmados exitosamente por la ECU!');
+          showInfoModal('Códigos borrados', 'La ECU confirmó el borrado y la memoria está limpia.');
         } else if (!msg.verifyOk) {
-          alert('La ECU aceptó el borrado y se está reiniciando. Verificando memoria nuevamente...');
+          showToast('La ECU aceptó el borrado y se está reiniciando. Verificando memoria...', 4000, 'ok');
         } else {
-          alert('La ECU aceptó el comando de borrado, pero la falla aún está físicamente presente (se volvió a detectar de inmediato). Revisa el sensor o circuito indicado.');
+          showInfoModal('La falla sigue presente', 'La ECU aceptó el borrado, pero la falla se volvió a detectar de inmediato. Revisa el sensor o circuito indicado.');
         }
       } else {
-        alert('La ECU no confirmó el comando de borrado. IMPORTANTE: En el Civic 99 debes tener el MOTOR APAGADO y la llave en posición ON (II) para que la ECU permita borrar códigos.');
+        showInfoModal('Borrado no confirmado', 'La ECU no confirmó el comando de borrado.<br><br><span style="color: var(--amber); font-weight: bold;">Importante:</span> en el Civic \'99 el <b>motor debe estar apagado</b> y la llave en posición <b>ON (II)</b> para que la ECU permita borrar códigos.');
       }
       fetchDtcs();
     }
@@ -2432,7 +2577,7 @@
     function executeClearDtcs() {
       closeModal();
       if (!isConnected) {
-        alert('⚠️ Primero debes conectarte al escáner por Bluetooth con el botón superior.');
+        showToast(NEED_BLE_MSG, 3500, 'warn');
         return;
       }
       bleCmdQueue.length = 0;
@@ -2505,6 +2650,21 @@
     ];
 
     let currentDtcFilter = 'all';
+
+    function toggleAdvanced() {
+      const body = document.getElementById('advBody');
+      const icon = document.getElementById('advToggleIcon');
+      const open = body.style.display === 'none';
+      body.style.display = open ? 'block' : 'none';
+      icon.textContent = open ? '▲' : '▼';
+    }
+
+    // Comandos de la sección Avanzado: avisan si no hay Bluetooth en vez de no hacer nada
+    function advCmd(cmd) {
+      if (!isConnected) { showToast(NEED_BLE_MSG, 3500, 'warn'); return; }
+      if (cmd) sendBleCmd(cmd);
+      else toggleEcuFormula();
+    }
 
     function toggleDtcLib() {
       const body = document.getElementById('dtcLibBody');
