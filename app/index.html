@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Civic OBD v28 - Escáner & Datalogger</title>
+  <title>Civic OBD v30 - Escáner & Datalogger</title>
   
   <!-- Cache Control (Evita que el navegador retenga versiones viejas al recargar) -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -22,7 +22,7 @@
 
   <style>
     /* =========================================================================
-     * CIVIC OBD v28 — Estilo "tablero OEM": negro, blanco, iluminación ámbar
+     * CIVIC OBD v30 — Estilo "tablero OEM": negro, blanco, iluminación ámbar
      * ========================================================================= */
     @font-face {
       font-family: 'Barlow Condensed';
@@ -826,7 +826,7 @@
     <div class="brand">
       <img src="icon-192.png" class="brand-logo" alt="Civic OBD">
       <div>
-        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD</span> <span class="brand-version" id="brandVersionBadge">v28</span></div>
+        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD</span> <span class="brand-version" id="brandVersionBadge">v30</span></div>
       </div>
     </div>
     <button id="btnConnect" class="btn-connect" onclick="toggleBleConnection()">
@@ -1135,6 +1135,7 @@
         <span id="advToggleIcon" style="color:var(--text-dim); font-size:0.85rem;">▼</span>
       </div>
       <div id="advBody" style="display:none; margin-top:12px;">
+        <div id="deviceInfoText" style="font-size:0.8rem; color:var(--text-dim); margin-bottom:8px;">Equipo: sin conectar</div>
         <div class="sub-block-head">
           <span class="sub-heading">Enlace K-Line</span>
         </div>
@@ -1152,7 +1153,7 @@
         <div class="sub-block">
           <div class="sub-block-head">
             <span class="sub-heading">Actualizaciones</span>
-            <span id="pwaVersionTag" class="badge-version">v28</span>
+            <span id="pwaVersionTag" class="badge-version">v30</span>
           </div>
           <div id="updateStatusText" style="font-size:0.78rem; color:var(--text-dim); margin-bottom:12px; line-height:1.4;">
             Esta app funciona 100% offline. Toca el botón para verificar con GitHub si hay una nueva versión disponible.
@@ -1260,7 +1261,7 @@
     // =========================================================================
     // SISTEMA DE ACTUALIZACIÓN MANUAL Y GESTIÓN DE CACHÉ PWA
     // =========================================================================
-    const APP_CURRENT_VERSION = 'v28';
+    const APP_CURRENT_VERSION = 'v30';
     let toastTimeout = null;
 
     function showToast(msg, duration = 3200, type = 'info') {
@@ -1496,6 +1497,8 @@
 
         isConnected = true;
         updateBleUi(true);
+        setDeviceInfoText(`Equipo: ${bleDevice.name || 'escáner'}`);
+        sendBleCmd('INFO'); // firmware >= 1.0.0 responde {"type":"info",...}
         await requestWakeLock();
         console.log('[BLE] Conectado exitosamente.');
       } catch (err) {
@@ -1514,12 +1517,18 @@
       onBleDisconnected();
     }
 
+    function setDeviceInfoText(text) {
+      const el = document.getElementById('deviceInfoText');
+      if (el) el.textContent = text;
+    }
+
     function onBleDisconnected() {
       isConnected = false;
       bleCmdQueue.length = 0;
       isBleWriting = false;
       releaseWakeLock();
       updateBleUi(false);
+      setDeviceInfoText('Equipo: sin conectar');
       console.log('[BLE] Desconectado.');
     }
 
@@ -1759,6 +1768,9 @@
         } else if (msg.type === 'ecuType') {
           ecuType = msg.val;
           showToast(`Fórmula de RPM configurada a OBD${ecuType}`, 3000, 'ok');
+        } else if (msg.type === 'info') {
+          if (msg.ecuType === 1 || msg.ecuType === 2) ecuType = msg.ecuType;
+          setDeviceInfoText(`${msg.name} · FW ${msg.fw} · HW ${msg.hw}`);
         }
       } catch (e) {
         console.error('Error parseando JSON BLE:', e);
