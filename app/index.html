@@ -1479,7 +1479,7 @@
         // Si ya teníamos el dispositivo emparejado en esta sesión, reconectar directo
         if (!bleDevice || !bleDevice.gatt) {
           bleDevice = await navigator.bluetooth.requestDevice({
-            filters: [{ name: 'Civic99-OBD' }],
+            filters: [{ namePrefix: 'Civic99-OBD' }], // equipos nuevos: 'Civic99-OBD-XXXX'
             optionalServices: [NUS_SERVICE_UUID]
           });
           bleDevice.addEventListener('gattserverdisconnected', onBleDisconnected);

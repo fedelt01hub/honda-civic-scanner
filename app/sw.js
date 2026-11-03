@@ -1,4 +1,4 @@
-const CACHE_NAME = 'civic-obd-v28';
+const CACHE_NAME = 'civic-obd-v29';
 const ASSETS = [
   './',
   './index.html',
