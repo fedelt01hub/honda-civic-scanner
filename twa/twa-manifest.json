@@ -1,0 +1,33 @@
+{
+  "packageId": "io.github.fedelt01hub.civicobd",
+  "host": "fedelt01hub.github.io",
+  "name": "Honda Civic '99 Scanner & Datalogger",
+  "launcherName": "Civic OBD",
+  "display": "standalone",
+  "orientation": "portrait",
+  "themeColor": "#0A0D14",
+  "navigationColor": "#0A0D14",
+  "navigationColorDark": "#0A0D14",
+  "navigationDividerColor": "#0A0D14",
+  "navigationDividerColorDark": "#0A0D14",
+  "backgroundColor": "#0A0D14",
+  "enableNotifications": false,
+  "startUrl": "/civic-obd/index.html",
+  "fullScopeUrl": "https://fedelt01hub.github.io/civic-obd/",
+  "webManifestUrl": "https://fedelt01hub.github.io/civic-obd/manifest.json",
+  "iconUrl": "https://fedelt01hub.github.io/civic-obd/icon-512.png",
+  "maskableIconUrl": "https://fedelt01hub.github.io/civic-obd/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "../android-signing/civic-obd.keystore",
+    "alias": "civic-key"
+  },
+  "appVersionCode": 1,
+  "appVersion": "1.0.0",
+  "minSdkVersion": 24,
+  "fallbackType": "customtabs",
+  "enableSiteSettingsShortcut": true,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-core",
+  "features": {}
+}

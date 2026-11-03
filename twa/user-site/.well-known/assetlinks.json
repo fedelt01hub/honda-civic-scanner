@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.fedelt01hub.civicobd",
+      "sha256_cert_fingerprints": [
+        "F9:40:8D:A3:0E:66:38:95:19:DC:0F:14:09:89:23:10:49:3E:7B:8E:E3:E3:40:E6:88:D6:52:E4:BA:79:A4:60"
+      ]
+    }
+  }
+]

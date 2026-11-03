@@ -17,3 +17,16 @@ Thumbs.db
 *.git_backup
 .git_backup/
 
+
+# Firma Android (NUNCA subir)
+android-signing/
+*.keystore
+*.jks
+
+# Build Android
+twa/android/.gradle/
+twa/android/**/build/
+twa/android/local.properties
+twa/node_modules/
+*.apk
+*.aab

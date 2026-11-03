@@ -1,4 +1,4 @@
-const CACHE_NAME = 'civic-obd-v25';
+const CACHE_NAME = 'civic-obd-v26';
 const ASSETS = [
   './',
   './index.html',
@@ -23,6 +23,11 @@ self.addEventListener('install', (event) => {
       }
     })
   );
+});
+
+// Permite que la página pida activar de inmediato un SW nuevo en espera
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
