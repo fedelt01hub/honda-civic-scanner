@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Civic OBD v30 - Escáner & Datalogger</title>
+  <title>K-Lino v31 - Escáner & Datalogger</title>
   
   <!-- Cache Control (Evita que el navegador retenga versiones viejas al recargar) -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -14,7 +14,7 @@
   <meta name="theme-color" content="#050506">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Civic OBD">
+  <meta name="apple-mobile-web-app-title" content="K-Lino">
   <link rel="preload" href="fonts/BarlowCondensed-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="icon-192.png">
@@ -22,7 +22,7 @@
 
   <style>
     /* =========================================================================
-     * CIVIC OBD v30 — Estilo "tablero OEM": negro, blanco, iluminación ámbar
+     * K-LINO v31 — Estilo "tablero OEM": negro, blanco, iluminación ámbar
      * ========================================================================= */
     @font-face {
       font-family: 'Barlow Condensed';
@@ -821,12 +821,12 @@
 </head>
 <body>
 
-  <!-- Header: Solo Civic '99 y Conectar Bluetooth -->
+  <!-- Header: marca K-Lino y Conectar Bluetooth -->
   <header>
     <div class="brand">
-      <img src="icon-192.png" class="brand-logo" alt="Civic OBD">
+      <img src="icon-192.png" class="brand-logo" alt="K-Lino">
       <div>
-        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD</span> <span class="brand-version" id="brandVersionBadge">v30</span></div>
+        <div class="brand-title">K-LINO <span class="brand-badge">OBD</span> <span class="brand-version" id="brandVersionBadge">v31</span></div>
       </div>
     </div>
     <button id="btnConnect" class="btn-connect" onclick="toggleBleConnection()">
@@ -1153,7 +1153,7 @@
         <div class="sub-block">
           <div class="sub-block-head">
             <span class="sub-heading">Actualizaciones</span>
-            <span id="pwaVersionTag" class="badge-version">v30</span>
+            <span id="pwaVersionTag" class="badge-version">v31</span>
           </div>
           <div id="updateStatusText" style="font-size:0.78rem; color:var(--text-dim); margin-bottom:12px; line-height:1.4;">
             Esta app funciona 100% offline. Toca el botón para verificar con GitHub si hay una nueva versión disponible.
@@ -1261,7 +1261,7 @@
     // =========================================================================
     // SISTEMA DE ACTUALIZACIÓN MANUAL Y GESTIÓN DE CACHÉ PWA
     // =========================================================================
-    const APP_CURRENT_VERSION = 'v30';
+    const APP_CURRENT_VERSION = 'v31';
     let toastTimeout = null;
 
     function showToast(msg, duration = 3200, type = 'info') {
@@ -1480,7 +1480,7 @@
         // Si ya teníamos el dispositivo emparejado en esta sesión, reconectar directo
         if (!bleDevice || !bleDevice.gatt) {
           bleDevice = await navigator.bluetooth.requestDevice({
-            filters: [{ namePrefix: 'Civic99-OBD' }], // equipos nuevos: 'Civic99-OBD-XXXX'
+            filters: [{ namePrefix: 'K-Lino' }, { namePrefix: 'Civic99-OBD' }], // 'K-Lino-XXXX' y equipos anteriores
             optionalServices: [NUS_SERVICE_UUID]
           });
           bleDevice.addEventListener('gattserverdisconnected', onBleDisconnected);
@@ -2134,7 +2134,7 @@
       const now = new Date();
       const dateStr = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
       link.setAttribute('href', url);
-      link.setAttribute('download', `Civic99_Log_${dateStr}.csv`);
+      link.setAttribute('download', `K-Lino_Log_${dateStr}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

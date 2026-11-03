@@ -1,8 +1,8 @@
 {
   "id": "./index.html",
-  "name": "Honda Civic '99 Scanner & Datalogger",
-  "short_name": "Civic OBD",
-  "description": "Escáner PGM-FI y Datalogger Bluetooth para Honda Civic '99",
+  "name": "K-Lino - Escáner y Datalogger",
+  "short_name": "K-Lino",
+  "description": "Escáner y datalogger Bluetooth compatible con Honda Civic 96-00 (conector de 3 pines)",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

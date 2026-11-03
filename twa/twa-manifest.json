@@ -1,8 +1,8 @@
 {
   "packageId": "io.github.fedelt01hub.civicobd",
   "host": "fedelt01hub.github.io",
-  "name": "Honda Civic '99 Scanner & Datalogger",
-  "launcherName": "Civic OBD",
+  "name": "K-Lino - Escáner y Datalogger",
+  "launcherName": "K-Lino",
   "display": "standalone",
   "orientation": "portrait",
   "themeColor": "#0A0D14",
