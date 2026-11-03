@@ -14,7 +14,9 @@ if [ -e "$PORT" ] && [ ! -w "$PORT" ]; then
 fi
 
 echo "[*] Subiendo firmware a través de PlatformIO..."
-"$DIR/.venv/bin/pio" run -t upload
+PIO_BIN="${PIO:-$(command -v pio || echo "$HOME/.platformio/penv/bin/pio")}"
+cd "$DIR"
+"$PIO_BIN" run -e esp32-c3 -t upload
 
 echo "================================================="
 echo "[OK] Firmware subido exitosamente al ESP32-C3!"
