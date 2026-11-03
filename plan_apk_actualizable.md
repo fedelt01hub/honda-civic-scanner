@@ -202,7 +202,7 @@ En caso de que en el futuro se desee prescindir por completo de Chrome en el tel
 
 - [x] **Paso 1:** Confirmar la URL exacta de GitHub Pages activa (`https://fedelt01hub.github.io/civic-obd/`). ✅ Confirmada: es la activa.
 - [x] **Paso 2:** Actualizar `app/manifest.json` y `app/sw.js` con soporte de actualización mejorado y botón de verificación de versión en la UI.
-- [x] **Paso 3:** Generar el keystore de firma y preparar `.well-known/assetlinks.json` (`twa/user-site/`). ⏳ Falta publicarlo en el repo `fedelt01hub.github.io` (ver `twa/README.md`).
+- [x] **Paso 3:** Generar el keystore de firma y preparar `.well-known/assetlinks.json` (`twa/user-site/`). ✅ Publicado en `https://fedelt01hub.github.io/.well-known/assetlinks.json` y validado por la API de Google.
 - [x] **Paso 4:** Crear el workflow `.github/workflows/build-apk.yml` (o compilar localmente con Bubblewrap) para obtener el archivo `Civic-OBD-Scanner.apk`.
 - [ ] **Paso 5:** Instalar el `.apk` en el teléfono Android y validar:
   1. Apertura en pantalla completa (sin barra de navegador).
