@@ -1,12 +1,12 @@
 /*
  * ==============================================================================
- * Honda Civic '99 PGM-FI Diagnostic Scanner & Live BLE Telemetry
+ * K-Lino - Escáner PGM-FI y telemetría BLE (compatible con Honda Civic 96-00, DLC 3 pines)
  * ==============================================================================
  * Plataforma: ESP32-C3 (BLE 5.0)
  * Transceptor: L9637D (ISO 9141 / K-Line)
  * Protocolo: Honda 3-Pin DLC (9600 Baud, 8N1, Half-Duplex, 20 05 ADDR LEN CS)
  *
- * Anuncia el servicio estándar Nordic UART Service (NUS) como 'Civic99-OBD'
+ * Anuncia el servicio estándar Nordic UART Service (NUS) como 'K-Lino-XXXX'
  * y transmite telemetría en tiempo real a 20 Hz (paquetes binarios de 29 bytes)
  * hacia la aplicación móvil PWA / Web Bluetooth.
  * ==============================================================================
@@ -45,7 +45,7 @@ volatile PendingCmd pendingCmd = CMD_NONE;
 // ==============================================================================
 // CONFIGURACIÓN BLUETOOTH LOW ENERGY (NORDIC UART SERVICE)
 // ==============================================================================
-#define BLE_DEVICE_NAME "Civic99-OBD"   // prefijo; el nombre real lleva "-XXXX" de la MAC
+#define BLE_DEVICE_NAME "K-Lino"   // prefijo; el nombre real lleva "-XXXX" de la MAC
 static char bleName[24] = BLE_DEVICE_NAME;
 #define SERVICE_UUID           "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
 #define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
@@ -248,7 +248,7 @@ class RxCallbacks : public BLECharacteristicCallbacks {
 void setup() {
   Serial.begin(115200);
   delay(500);
-  Serial.println("\n--- Honda Civic '99 Scanner BLE Inicializando ---");
+  Serial.println("\n--- K-Lino Scanner BLE Inicializando ---");
 
   // Si venimos de deep sleep (llave en OFF), solo una ventana corta para buscar la ECU
   if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER) {

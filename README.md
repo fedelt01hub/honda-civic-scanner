@@ -1,4 +1,4 @@
-# 🚗 Honda Civic '99 K-Line Diagnostic Scanner & Live BLE Telemetry
+# 🚗 K-Lino — Escáner K-Line y telemetría BLE (compatible con Honda Civic 96–00)
 
 Sistema integral de diagnóstico OBD y telemetría en tiempo real para **Honda Civic 1999 (PCM P2P / Motor D16Y8)** utilizando el conector **DLC de 3 pines**, microcontrolador **ESP32-C3** con Bluetooth Low Energy (BLE 5.0) y transceptor **L9637D**.
 

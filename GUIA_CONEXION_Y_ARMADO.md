@@ -135,7 +135,7 @@ Web Bluetooth requiere una conexión segura (HTTPS o localhost). Tienes dos form
 ### Paso 3: Conectar el Escáner por Bluetooth
 1. Abre la aplicación **Civic OBD** en tu celular.
 2. Presiona el botón **⚡ Conectar BLE**.
-3. Selecciona tu dispositivo de la lista: **`Civic99-OBD`**.
+3. Selecciona tu dispositivo de la lista: **`K-Lino-XXXX`** (los 4 caracteres finales identifican tu equipo; firmware anterior: `Civic99-OBD`).
 4. ¡Listo! En milisegundos se sincronizarán en vivo:
    - Tacómetro de aguja fluido a 20-30 Hz (con selector de fórmula OBD1/OBD2).
    - Indicadores de VTEC, A/C Clutch, Freno, Gear automático y sensores.
