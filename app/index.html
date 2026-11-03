@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Civic OBD v27 - Escáner & Datalogger</title>
+  <title>Civic OBD v28 - Escáner & Datalogger</title>
   
   <!-- Cache Control (Evita que el navegador retenga versiones viejas al recargar) -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -11,44 +11,62 @@
   <meta http-equiv="Expires" content="0">
 
   <!-- PWA Metadata -->
-  <meta name="theme-color" content="#0a0d14">
+  <meta name="theme-color" content="#050506">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Civic OBD">
-  <link rel="preload" href="fonts/ChakraPetch-BoldItalic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/BarlowCondensed-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <style>
+    /* =========================================================================
+     * CIVIC OBD v28 — Estilo "tablero OEM": negro, blanco, iluminación ámbar
+     * ========================================================================= */
     @font-face {
-      font-family: 'Chakra Petch';
-      font-style: italic;
-      font-weight: 700;
+      font-family: 'Barlow Condensed';
+      font-style: normal;
+      font-weight: 600;
       font-display: swap;
-      src: url('fonts/ChakraPetch-BoldItalic.woff2') format('woff2');
+      src: url('fonts/BarlowCondensed-SemiBold.woff2') format('woff2');
     }
 
     :root {
-      --bg: #0a0d14;
-      --card-bg: rgba(19, 25, 36, 0.85);
-      --card-border: rgba(255, 255, 255, 0.08);
-      --text: #f0f4f8;
-      --text-dim: #8b9bb4;
-      --primary: #00e5ff;
-      --accent: #ff2d55;
-      --accent-glow: rgba(255, 45, 85, 0.4);
-      --vtec: #00e676;
-      --vtec-glow: rgba(0, 230, 118, 0.5);
-      --ac-color: #00e5ff;
-      --ac-glow: rgba(0, 229, 255, 0.4);
-      --amber: #ffb300;
+      /* Superficies */
+      --bg: #050506;
+      --face: #0d0d0f;
+      --panel: #121215;
+      --panel-2: #18181c;
+      --card-bg: #121215;
+      --card-border: #24242a;
+      --line: #1e1e23;
+      /* Texto */
+      --text: #f2f2f0;
+      --text-dim: #8e8e93;
+      --text-faint: #4a4a50;
+      /* Iluminación */
+      --amber: #ff8a1e;
+      --amber-soft: rgba(255, 138, 30, 0.14);
+      --red: #e5322b;
+      --green: #3fd65a;
+      --blue: #3aa0ff;
+      /* Alias usados por estilos inline y JS existentes */
+      --primary: var(--amber);
+      --accent: var(--red);
+      --accent-glow: rgba(229, 50, 43, 0.35);
+      --vtec: var(--green);
+      --vtec-glow: rgba(63, 214, 90, 0.4);
+      --ac-color: var(--blue);
+      --ac-glow: rgba(58, 160, 255, 0.35);
       /* Semáforo de rangos */
-      --ok: #00e676;
-      --warn: #ffb300;
-      --crit: #ff2d55;
-      --cold: #00b4d8;
-      --card-radius: 16px;
+      --ok: var(--green);
+      --warn: #ffb020;
+      --crit: #ff3b30;
+      --cold: var(--blue);
+      /* Tipografía */
+      --num: 'Barlow Condensed', 'Arial Narrow', 'Roboto Condensed', sans-serif;
+      --ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       --safe-bottom: env(safe-area-inset-bottom, 12px);
     }
 
@@ -61,83 +79,107 @@
     }
 
     body {
-      background-color: var(--bg);
+      background: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: var(--ui);
       overflow-x: hidden;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      padding-bottom: calc(75px + var(--safe-bottom));
+      padding-bottom: calc(76px + var(--safe-bottom));
     }
 
-    /* Header Bar */
+    button { font-family: inherit; }
+
+    /* ------------------------------------------------------------------ Header */
     header {
-      background: rgba(10, 13, 20, 0.95);
+      background: rgba(5, 5, 6, 0.92);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       position: sticky;
       top: 0;
       z-index: 100;
-      padding: 12px 16px;
+      padding: 10px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid var(--card-border);
+      border-bottom: 1px solid var(--line);
     }
-
-    .brand {
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-logo { width: 30px; height: 30px; border-radius: 8px; opacity: 0.95; }
+    .brand-title {
+      font-family: var(--num);
+      font-size: 1.35rem;
+      letter-spacing: 1.5px;
+      color: var(--text);
       display: flex;
       align-items: center;
-      gap: 10px;
-    }
-    .brand-logo {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-    }
-    .brand-title {
-      font-size: 1.05rem;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      color: #fff;
+      gap: 8px;
+      line-height: 1;
     }
     .brand-badge {
-      font-size: 0.65rem;
-      background: rgba(255, 45, 85, 0.2);
-      color: var(--accent);
-      padding: 2px 6px;
-      border-radius: 6px;
-      font-weight: 700;
-      letter-spacing: 1px;
+      font-family: var(--ui);
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      color: var(--amber);
+      border: 1px solid rgba(255, 138, 30, 0.45);
+      padding: 2px 5px;
+      border-radius: 4px;
     }
     .brand-version {
-      font-size: 0.65rem;
-      background: rgba(0, 240, 255, 0.15);
-      border: 1px solid rgba(0, 240, 255, 0.35);
-      color: var(--primary);
-      padding: 2px 7px;
-      border-radius: 6px;
-      font-weight: 800;
+      font-family: var(--ui);
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: var(--text-faint);
       letter-spacing: 0.5px;
-      margin-left: 4px;
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
     }
 
-    /* Toast Notificación */
+    .btn-connect {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid #2e2e35;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, color 0.2s;
+    }
+    .btn-connect:active { transform: scale(0.97); }
+    .btn-connect.connected {
+      border-color: rgba(63, 214, 90, 0.45);
+      color: var(--green);
+      background: rgba(63, 214, 90, 0.08);
+    }
+    .status-dot-circle {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      background: var(--red);
+      box-shadow: 0 0 6px rgba(229, 50, 43, 0.7);
+    }
+    .status-dot-circle.connected {
+      background: var(--green);
+      box-shadow: 0 0 6px rgba(63, 214, 90, 0.8);
+    }
+
+    /* ------------------------------------------------------------------ Toast */
     .toast-notify {
       position: fixed;
       top: 18px;
       left: 50%;
       transform: translateX(-50%) translateY(-100px);
-      background: rgba(18, 24, 38, 0.96);
-      border: 1px solid var(--primary);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 240, 255, 0.3);
+      background: #141417;
+      border: 1px solid var(--amber);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8);
       border-radius: 12px;
       padding: 12px 18px;
-      color: #fff;
+      color: var(--text);
       font-size: 0.85rem;
       font-weight: 600;
       display: flex;
@@ -150,720 +192,529 @@
       max-width: 90vw;
       text-align: center;
     }
-    .toast-notify.toast-ok { border-color: var(--ok); box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 15px rgba(0,230,118,0.3); }
-    .toast-notify.toast-warn { border-color: var(--warn); box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 15px rgba(255,179,0,0.3); }
-    .toast-notify.toast-error { border-color: var(--crit); box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 15px rgba(255,45,85,0.35); }
+    .toast-notify.toast-ok { border-color: var(--green); }
+    .toast-notify.toast-warn { border-color: var(--warn); }
+    .toast-notify.toast-error { border-color: var(--crit); }
     .toast-notify.show {
       transform: translateX(-50%) translateY(0);
       opacity: 1;
       pointer-events: auto;
     }
 
-    .btn-connect {
-      background: linear-gradient(135deg, #ff2d55, #d50000);
-      color: #fff;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 20px;
-      font-size: 0.82rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      box-shadow: 0 4px 14px var(--accent-glow);
-      transition: all 0.2s ease;
-    }
-    .btn-connect:active {
-      transform: scale(0.96);
-    }
-    .btn-connect.connected {
-      background: rgba(0, 230, 118, 0.15);
-      color: var(--vtec);
-      border: 1px solid rgba(0, 230, 118, 0.4);
-      box-shadow: 0 0 12px rgba(0, 230, 118, 0.2);
-    }
-
-    /* Install Banner */
-    .install-banner {
-      display: none;
-      background: linear-gradient(90deg, #162032, #1b283d);
-      padding: 10px 16px;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--card-border);
-      font-size: 0.8rem;
-    }
-    .install-banner button {
-      background: var(--vtec);
-      color: #000;
-      border: none;
-      padding: 5px 12px;
-      border-radius: 12px;
-      font-weight: 700;
-      font-size: 0.75rem;
-    }
-
-    /* Status Pills */
-    .status-bar {
-      display: flex;
-      gap: 6px;
-      padding: 10px 16px;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-    .status-bar::-webkit-scrollbar { display: none; }
-
-    .pill {
-      flex: 1;
-      min-width: 65px;
-      text-align: center;
-      padding: 6px 4px;
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: var(--text-dim);
-      transition: all 0.2s ease;
-    }
-    .pill.active-vtec {
-      background: rgba(0, 230, 118, 0.2);
-      border-color: var(--vtec);
-      color: #fff;
-      box-shadow: 0 0 14px var(--vtec-glow);
-      animation: pulseVtec 1s infinite alternate;
-    }
-    .pill.active-ac {
-      background: rgba(0, 229, 255, 0.2);
-      border-color: var(--ac-color);
-      color: #fff;
-      box-shadow: 0 0 12px var(--ac-glow);
-    }
-    .pill.active-brake {
-      background: rgba(255, 45, 85, 0.25);
-      border-color: var(--accent);
-      color: #fff;
-      box-shadow: 0 0 12px var(--accent-glow);
-    }
-    .pill.active-pn {
-      background: rgba(255, 179, 0, 0.2);
-      border-color: var(--amber);
-      color: #fff;
-    }
-    @keyframes pulseVtec {
-      from { transform: scale(1); }
-      to { transform: scale(1.04); }
-    }
-
-    /* Tab Views */
-    .tab-content {
-      display: none;
-      padding: 8px 16px 20px 16px;
-    }
-    .tab-content.active {
-      display: block;
-    }
-    /* Status dot indicators */
-    .status-dot-circle {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      display: inline-block;
-      background: #ff2d55;
-      box-shadow: 0 0 8px #ff2d55;
-    }
-    .status-dot-circle.connected {
-      background: #00e676;
-      box-shadow: 0 0 8px #00e676;
-    }
-
-    .rec-dot-css {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      display: inline-block;
-      background: #fff;
-    }
-    .rec-btn.recording .rec-dot-css {
-      background: #ff1744;
-      box-shadow: 0 0 8px #ff1744;
-      animation: pulseVtec 0.8s infinite alternate;
-    }
+    /* ------------------------------------------------------------------ Tabs */
+    .tab-content { display: none; padding: 10px 14px 20px 14px; }
+    .tab-content.active { display: block; }
 
     /* =========================================================================
-     * TRIPLE CLUSTER POD STYLES (RPM - KM/H CENTRO - TEMP)
+     * CLUSTER DE RELOJES ANALÓGICOS
      * ========================================================================= */
     .triple-cluster {
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: center;
-      gap: 8px;
-      margin: 4px auto 14px auto;
-      max-width: 650px;
-      padding: 16px 8px;
-      background: radial-gradient(ellipse at center, #162032 0%, #090d16 100%);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 28px;
-      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      margin: 2px auto 12px auto;
+      max-width: 620px;
+      padding: 26px 8px 10px 8px;
+      background:
+        radial-gradient(120% 90% at 50% 0%, #17171b 0%, #08080a 70%),
+        var(--face);
+      border: 1px solid #1f1f24;
+      border-radius: 26px;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        inset 0 -20px 40px rgba(0, 0, 0, 0.6),
+        0 16px 40px rgba(0, 0, 0, 0.7);
       position: relative;
+      overflow: hidden;
     }
-
     .pod-side {
-      flex: 1;
-      max-width: 170px;
-      min-width: 90px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      flex: 0 0 31%;
+      max-width: 200px;
       position: relative;
+      z-index: 1;
     }
-
+    .pod-rpm { margin-right: -6%; }
+    .pod-temp { margin-left: -6%; }
     .pod-center {
-      flex: 1.6;
-      max-width: 255px;
-      min-width: 145px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      flex: 0 0 50%;
+      max-width: 300px;
       position: relative;
       z-index: 2;
     }
-
     .pod-svg-wrap {
       position: relative;
       width: 100%;
       aspect-ratio: 1 / 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
-
     .pod-svg {
       width: 100%;
       height: 100%;
       display: block;
-      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
+      overflow: visible;
     }
+    .gauge-needle {
+      transform-box: view-box;
+      transform-origin: 100px 100px;
+      transition: transform 90ms linear;
+      filter: drop-shadow(0 0 2px rgba(255, 138, 30, 0.55));
+    }
+    .gauge-needle.sweep { transition: transform 450ms cubic-bezier(0.45, 0, 0.55, 1); }
 
     .pod-inner-info {
       position: absolute;
-      top: 50%;
       left: 50%;
-      transform: translate(-50%, -46%);
+      top: 69%;
+      transform: translateX(-50%);
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       pointer-events: none;
-      width: 100%;
+      width: 70%;
     }
-
-    .pod-val-side {
-      font-family: 'Chakra Petch', monospace;
-      font-size: clamp(1.1rem, 4.4vw, 2.1rem);
-      font-weight: 700;
-      color: #fff;
+    .pod-val-side, .pod-val-center {
+      font-family: var(--num);
+      color: var(--text);
       line-height: 1;
       font-variant-numeric: tabular-nums;
-      text-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
+      transition: color 0.3s;
     }
-
-    .pod-val-center {
-      font-family: 'Chakra Petch', monospace;
-      font-size: clamp(2.7rem, 9.5vw, 4.2rem);
-      font-weight: 700;
-      color: #fff;
-      line-height: 0.9;
-      letter-spacing: -1px;
-      font-variant-numeric: tabular-nums;
-      text-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
-    }
-
+    .pod-val-side { font-size: clamp(1rem, 4.2vw, 1.6rem); }
+    .pod-val-center { font-size: clamp(1.9rem, 8vw, 3rem); letter-spacing: 0.5px; }
     .pod-unit-lbl {
-      font-size: clamp(0.65rem, 2vw, 0.78rem);
-      font-weight: 800;
+      font-size: clamp(0.5rem, 1.7vw, 0.66rem);
+      font-weight: 700;
       color: var(--text-dim);
-      letter-spacing: 1.2px;
-      margin-top: 3px;
+      letter-spacing: 1.5px;
+      margin-top: 2px;
       text-transform: uppercase;
     }
+    .pod-val-side.lvl-warn { color: var(--warn); }
+    .pod-val-side.lvl-crit { color: var(--crit); }
+    .pod-val-side.lvl-cold { color: var(--cold); }
 
-    /* Warning Indicators Bar */
+    /* ------------------------------------------------------------------ Testigos */
     .warning-indicators-bar {
       display: flex;
       justify-content: center;
-      align-items: center;
-      gap: 4px;
-      padding: 0 4px;
-      margin-bottom: 12px;
+      align-items: stretch;
+      gap: 5px;
+      margin: 0 0 14px 0;
       flex-wrap: wrap;
     }
-
     .warn-badge {
-      padding: 6px 8px;
-      border-radius: 8px;
-      font-size: clamp(0.66rem, 2.6vw, 0.75rem);
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      color: rgba(255, 255, 255, 0.45);
-      transition: all 0.2s ease;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-    }
-
-    .warn-badge.active-cel {
-      background: rgba(255, 179, 0, 0.2);
-      border-color: #ffb300;
-      color: #ffb300;
-      box-shadow: 0 0 12px rgba(255, 179, 0, 0.45);
-    }
-
-    .warn-badge.active-vtec {
-      background: rgba(0, 230, 118, 0.2);
-      border-color: #00e676;
-      color: #00e676;
-      box-shadow: 0 0 12px rgba(0, 230, 118, 0.4);
-      animation: pulseVtec 0.8s infinite alternate;
-    }
-
-    .warn-badge.active-brake {
-      background: rgba(255, 23, 68, 0.2);
-      border-color: #ff1744;
-      color: #ff1744;
-      box-shadow: 0 0 12px rgba(255, 23, 68, 0.4);
-    }
-
-    .warn-badge.active-ac {
-      background: rgba(0, 229, 255, 0.2);
-      border-color: #00e5ff;
-      color: #00e5ff;
-      box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
-    }
-
-    .warn-badge.active-pn {
-      background: rgba(255, 179, 0, 0.15);
-      border-color: #ffb300;
-      color: #ffb300;
-    }
-
-    /* Sensor Grid - Compacto */
-    .grid-title {
-      font-size: 0.75rem;
+      gap: 5px;
+      padding: 6px 9px;
+      border-radius: 8px;
+      background: #0b0b0d;
+      border: 1px solid #1d1d22;
+      color: #3d3d43;
+      font-size: clamp(0.64rem, 2.5vw, 0.74rem);
       font-weight: 800;
       letter-spacing: 0.8px;
-      color: var(--text-dim);
-      margin: 12px 0 6px 3px;
-      text-transform: uppercase;
+      transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s, text-shadow 0.2s;
     }
+    .warn-badge svg { flex-shrink: 0; }
+    .warn-badge.active-cel {
+      color: var(--warn);
+      border-color: rgba(255, 176, 32, 0.5);
+      background: rgba(255, 176, 32, 0.1);
+      text-shadow: 0 0 8px rgba(255, 176, 32, 0.7);
+      box-shadow: 0 0 14px rgba(255, 176, 32, 0.18);
+    }
+    .warn-badge.active-vtec {
+      color: var(--green);
+      border-color: rgba(63, 214, 90, 0.5);
+      background: rgba(63, 214, 90, 0.1);
+      text-shadow: 0 0 8px rgba(63, 214, 90, 0.7);
+      box-shadow: 0 0 14px rgba(63, 214, 90, 0.18);
+    }
+    .warn-badge.active-brake {
+      color: var(--red);
+      border-color: rgba(229, 50, 43, 0.55);
+      background: rgba(229, 50, 43, 0.1);
+      text-shadow: 0 0 8px rgba(229, 50, 43, 0.8);
+      box-shadow: 0 0 14px rgba(229, 50, 43, 0.2);
+    }
+    .warn-badge.active-ac {
+      color: var(--blue);
+      border-color: rgba(58, 160, 255, 0.5);
+      background: rgba(58, 160, 255, 0.1);
+      text-shadow: 0 0 8px rgba(58, 160, 255, 0.7);
+    }
+    .warn-badge.active-pn {
+      color: var(--green);
+      border-color: rgba(63, 214, 90, 0.45);
+      background: rgba(63, 214, 90, 0.08);
+      text-shadow: 0 0 8px rgba(63, 214, 90, 0.6);
+    }
+    .ecu-link {
+      position: absolute;
+      top: 9px;
+      left: 16px;
+      z-index: 3;
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: var(--text-faint);
+      transition: color 0.2s;
+    }
+
+    /* =========================================================================
+     * PANELES DE SENSORES ("computadora de viaje")
+     * ========================================================================= */
+    .sensor-panel {
+      background: var(--face);
+      border: 1px solid #1d1d22;
+      border-radius: 16px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    }
+    .grid-title {
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 1.6px;
+      color: var(--amber);
+      text-transform: uppercase;
+      padding: 10px 14px 8px 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .grid-title::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 6px rgba(255, 138, 30, 0.8);
+    }
+    /* En Diagnóstico grid-title se usa suelto (sin panel) */
+    .tab-content > .grid-title { border: none; padding: 14px 4px 8px 4px; }
+
     .sensor-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 7px;
+      gap: 1px;
+      background: var(--line);
     }
     .sensor-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 10px 12px;
+      background: var(--face);
+      padding: 10px 14px 11px 14px;
       position: relative;
-      transition: border-color 0.3s ease, background 0.3s ease;
+      transition: background 0.3s ease;
     }
+    /* Celda huérfana en una fila impar ocupa todo el ancho */
+    .sensor-grid > .sensor-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
     .sensor-label {
-      font-size: 0.75rem;
+      font-size: 0.66rem;
       color: var(--text-dim);
-      font-weight: 600;
-      line-height: 1.15;
+      font-weight: 700;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      line-height: 1.2;
     }
     .sensor-val-wrap {
       display: flex;
       align-items: baseline;
-      gap: 3px;
-      margin-top: 2px;
+      gap: 4px;
+      margin-top: 3px;
     }
     .sensor-val {
-      font-size: 1.45rem;
-      font-weight: 800;
-      color: #fff;
+      font-family: var(--num);
+      font-size: 1.75rem;
+      color: var(--text);
       font-variant-numeric: tabular-nums;
-      line-height: 1.1;
+      line-height: 1;
+      transition: color 0.3s;
     }
     .sensor-unit {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       color: var(--text-dim);
       font-weight: 600;
+    }
+    .sensor-sub {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+      font-variant-numeric: tabular-nums;
     }
     .sensor-bar-bg {
       width: 100%;
       height: 3px;
-      background: rgba(255, 255, 255, 0.08);
+      background: #1c1c21;
       border-radius: 2px;
-      margin-top: 5px;
+      margin-top: 7px;
       overflow: hidden;
     }
     .sensor-bar-fill {
       height: 100%;
-      background: var(--primary);
+      background: var(--amber);
       border-radius: 2px;
       width: 0%;
       transition: width 0.1s linear, background 0.3s ease;
-    }
-    .sensor-sub {
-      font-size: 0.75rem;
-      color: var(--text-dim);
-      margin-top: 4px;
+      box-shadow: 0 0 6px rgba(255, 138, 30, 0.5);
     }
 
-    /* Semáforo: data-level en .sensor-card */
-    .sensor-card[data-level="ok"] .sensor-val { color: var(--ok); }
+    /* Semáforo: data-level en .sensor-card (OK = blanco, como un tablero) */
     .sensor-card[data-level="cold"] .sensor-val { color: var(--cold); }
-    .sensor-card[data-level="cold"] .sensor-bar-fill { background: var(--cold); }
-    .sensor-card[data-level="warn"] { border-color: rgba(255, 179, 0, 0.55); background: rgba(255, 179, 0, 0.08); }
+    .sensor-card[data-level="cold"] .sensor-bar-fill { background: var(--cold); box-shadow: none; }
+    .sensor-card[data-level="warn"] { background: rgba(255, 176, 32, 0.07); }
     .sensor-card[data-level="warn"] .sensor-val,
     .sensor-card[data-level="warn"] .sensor-sub { color: var(--warn); }
     .sensor-card[data-level="warn"] .sensor-bar-fill { background: var(--warn); }
-    .sensor-card[data-level="crit"] { border-color: var(--crit); background: rgba(255, 45, 85, 0.12); animation: critPulse 1s infinite alternate; }
+    .sensor-card[data-level="crit"] { background: rgba(255, 59, 48, 0.1); animation: critPulse 1s infinite alternate; }
     .sensor-card[data-level="crit"] .sensor-val,
     .sensor-card[data-level="crit"] .sensor-sub { color: var(--crit); }
     .sensor-card[data-level="crit"] .sensor-bar-fill { background: var(--crit); }
     @keyframes critPulse {
-      from { box-shadow: 0 0 0 rgba(255, 45, 85, 0); }
-      to { box-shadow: 0 0 14px rgba(255, 45, 85, 0.45); }
+      from { background: rgba(255, 59, 48, 0.05); }
+      to { background: rgba(255, 59, 48, 0.16); }
     }
-    .pod-val-side.lvl-warn { color: var(--warn); text-shadow: 0 0 12px rgba(255, 179, 0, 0.5); }
-    .pod-val-side.lvl-crit { color: var(--crit); text-shadow: 0 0 14px rgba(255, 45, 85, 0.7); }
-    .pod-val-side.lvl-cold { color: var(--cold); }
 
-    /* Datalogger View */
+    /* ------------------------------------------------------------------ Datalogger */
     .datalogger-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 20px;
+      background: var(--face);
+      border: 1px solid #1d1d22;
+      border-radius: 18px;
       padding: 18px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       text-align: center;
     }
     .rec-btn {
       width: 100%;
       padding: 16px;
-      border-radius: 16px;
-      border: none;
-      font-size: 1.1rem;
+      border-radius: 14px;
+      border: 2px solid var(--red);
+      font-size: 1.05rem;
       font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
       cursor: pointer;
-      background: linear-gradient(135deg, #ff2d55, #c2185b);
-      color: #fff;
-      box-shadow: 0 6px 20px var(--accent-glow);
-      transition: transform 0.2s ease;
+      background: linear-gradient(180deg, #1a1a1e, #0c0c0e);
+      color: var(--text);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 6px 18px rgba(0, 0, 0, 0.6);
+      transition: transform 0.15s ease, opacity 0.2s;
     }
-    .rec-btn:active {
-      transform: scale(0.98);
+    .rec-btn:active { transform: scale(0.98); }
+    .rec-dot-css {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      background: var(--red);
     }
-    .rec-btn.recording {
-      background: linear-gradient(135deg, #37474f, #212121);
-      color: #ff5252;
-      border: 2px solid #ff5252;
-      animation: recPulse 1.5s infinite;
-    }
+    .rec-btn.recording { color: var(--red); animation: recPulse 1.5s infinite; }
+    .rec-btn.recording .rec-dot-css { animation: recDot 0.8s infinite alternate; }
+    .rec-btn.offline { opacity: 0.55; }
     @keyframes recPulse {
-      0%, 100% { box-shadow: 0 0 10px rgba(255, 82, 82, 0.3); }
-      50% { box-shadow: 0 0 25px rgba(255, 82, 82, 0.7); }
+      0%, 100% { box-shadow: 0 0 0 rgba(229, 50, 43, 0); }
+      50% { box-shadow: 0 0 22px rgba(229, 50, 43, 0.45); }
     }
+    @keyframes recDot { from { opacity: 1; } to { opacity: 0.25; } }
+    .rec-hint { font-size: 0.75rem; color: var(--warn); margin-top: 8px; font-weight: 600; }
 
     .rec-stats {
       display: flex;
       justify-content: space-around;
       margin-top: 14px;
       padding-top: 14px;
-      border-top: 1px solid var(--card-border);
+      border-top: 1px solid var(--line);
     }
-    .rec-stat-box {
-      text-align: center;
-    }
+    .rec-stat-box { text-align: center; }
     .rec-stat-num {
-      font-size: 1.25rem;
-      font-weight: 800;
-      color: #fff;
+      font-family: var(--num);
+      font-size: 1.7rem;
+      color: var(--text);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
     }
     .rec-stat-label {
-      font-size: 0.68rem;
+      font-size: 0.64rem;
       color: var(--text-dim);
-      font-weight: 600;
+      font-weight: 700;
+      letter-spacing: 1px;
       text-transform: uppercase;
-      margin-top: 2px;
+      margin-top: 4px;
     }
 
-    /* Timers & Runs */
     .run-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
+      background: var(--face);
+      border: 1px solid #1d1d22;
       border-radius: 18px;
       padding: 16px;
       margin-bottom: 12px;
     }
-    .run-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    .run-title {
-      font-size: 0.9rem;
-      font-weight: 800;
-      color: #fff;
-    }
-    .run-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
+    .run-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; }
+    .run-title { font-size: 0.72rem; font-weight: 800; letter-spacing: 1.4px; color: var(--amber); text-transform: uppercase; }
+    .run-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .run-box {
-      background: rgba(255, 255, 255, 0.04);
-      padding: 10px 8px;
+      background: #08080a;
+      border: 1px solid #1a1a1f;
+      padding: 10px 6px;
       border-radius: 12px;
       text-align: center;
     }
     .run-box-time {
-      font-size: 1.2rem;
-      font-weight: 800;
-      color: var(--vtec);
+      font-family: var(--num);
+      font-size: 1.6rem;
+      color: var(--amber);
+      line-height: 1;
       font-variant-numeric: tabular-nums;
     }
-    .run-box-lbl {
-      font-size: 0.65rem;
-      color: var(--text-dim);
-      font-weight: 700;
-      margin-top: 2px;
-    }
+    .run-box-lbl { font-size: 0.62rem; color: var(--text-dim); font-weight: 700; letter-spacing: 0.6px; margin-top: 5px; }
 
-    /* Canvas Chart */
     .chart-container {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
+      background: var(--face);
+      border: 1px solid #1d1d22;
       border-radius: 18px;
       padding: 14px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
     .chart-title {
-      font-size: 0.8rem;
-      font-weight: 700;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
       color: var(--text-dim);
       margin-bottom: 10px;
     }
-    canvas {
-      width: 100%;
-      height: 140px;
-      display: block;
-      border-radius: 8px;
-    }
+    .chart-key { display: inline-flex; align-items: center; gap: 4px; margin-left: 10px; }
+    .chart-key::before { content: ''; width: 10px; height: 3px; border-radius: 2px; background: currentColor; }
+    canvas { width: 100%; height: 150px; display: block; border-radius: 8px; }
 
-    /* Export Button */
     .btn-export {
       width: 100%;
       padding: 14px;
       border-radius: 14px;
-      background: rgba(0, 230, 118, 0.15);
-      border: 1px solid rgba(0, 230, 118, 0.4);
-      color: var(--vtec);
-      font-size: 0.95rem;
+      background: var(--panel);
+      border: 1px solid rgba(255, 138, 30, 0.45);
+      color: var(--amber);
+      font-size: 0.92rem;
       font-weight: 800;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
       cursor: pointer;
-      margin-top: 10px;
+      margin-top: 4px;
     }
+    .btn-export:disabled { opacity: 0.4; }
 
-    /* Diagnostic Tab */
-    .dtc-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin: 12px 0;
-    }
+    /* ------------------------------------------------------------------ Diagnóstico */
+    .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 4px; }
+    .card-sub { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 14px; }
+
+    .dtc-list { display: flex; flex-direction: column; gap: 10px; margin: 12px 0; }
     .dtc-card, .dtc-lib-item { user-select: text; }
     .dtc-card {
-      background: var(--card-bg);
-      border: 1px solid rgba(255, 45, 85, 0.3);
+      background: var(--face);
+      border: 1px solid rgba(229, 50, 43, 0.35);
+      border-left: 3px solid var(--red);
       border-radius: 14px;
       padding: 14px;
     }
     .dtc-badge {
       display: inline-block;
-      background: var(--accent);
+      background: var(--red);
       color: #fff;
-      font-weight: 800;
-      font-size: 0.75rem;
-      padding: 3px 8px;
-      border-radius: 6px;
+      font-family: var(--num);
+      font-size: 0.95rem;
+      letter-spacing: 0.5px;
+      padding: 1px 8px;
+      border-radius: 5px;
       margin-bottom: 6px;
     }
-    .dtc-name {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #fff;
-    }
-    .dtc-desc {
-      font-size: 0.78rem;
-      color: var(--text-dim);
-      margin-top: 4px;
-      line-height: 1.3;
-    }
+    .dtc-name { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+    .dtc-desc { font-size: 0.8rem; color: var(--text-dim); margin-top: 4px; line-height: 1.35; }
 
-    /* Freeze Frame Card */
     .freeze-card {
-      background: linear-gradient(135deg, rgba(0, 229, 255, 0.08) 0%, rgba(0, 114, 255, 0.04) 100%), var(--card-bg);
-      border: 1px solid rgba(0, 229, 255, 0.35);
+      background: var(--face);
+      border: 1px solid rgba(255, 138, 30, 0.35);
+      border-left: 3px solid var(--amber);
       border-radius: 14px;
       padding: 14px;
       margin-bottom: 12px;
     }
     .freeze-badge {
       display: inline-block;
-      background: linear-gradient(90deg, #00b4db, #0083b0);
-      color: #fff;
+      background: var(--amber);
+      color: #120800;
       font-weight: 800;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       padding: 3px 8px;
-      border-radius: 6px;
-      letter-spacing: 0.5px;
+      border-radius: 5px;
+      letter-spacing: 0.6px;
     }
-    .freeze-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(65px, 1fr));
-      gap: 8px;
-      margin-top: 10px;
-    }
-    .freeze-item {
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 8px;
-      padding: 6px 8px;
-      text-align: center;
-    }
-    .freeze-label {
-      font-size: 0.68rem;
-      color: var(--text-dim);
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-    .freeze-val {
-      font-size: 0.95rem;
-      font-weight: 800;
-      color: #00e5ff;
-      margin-top: 2px;
-      font-family: monospace;
-    }
+    .freeze-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(68px, 1fr)); gap: 8px; margin-top: 10px; }
+    .freeze-item { background: #08080a; border: 1px solid #1a1a1f; border-radius: 8px; padding: 6px 8px; text-align: center; }
+    .freeze-label { font-size: 0.64rem; color: var(--text-dim); font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; }
+    .freeze-val { font-family: var(--num); font-size: 1.2rem; color: var(--amber); margin-top: 2px; }
 
-    /* DTC Library */
     .dtc-lib-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
+      background: var(--face);
+      border: 1px solid #1d1d22;
       border-radius: 16px;
       padding: 14px;
-      margin: 12px 0 16px 0;
+      margin: 12px 0;
     }
-    .dtc-lib-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      user-select: none;
-    }
+    .dtc-lib-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
     .dtc-search-input {
       width: 100%;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid var(--card-border);
+      background: #08080a;
+      border: 1px solid #24242a;
       border-radius: 10px;
-      padding: 10px 14px;
-      color: #fff;
-      font-size: 0.85rem;
+      padding: 11px 14px;
+      color: var(--text);
+      font-size: 0.88rem;
       outline: none;
-      box-sizing: border-box;
       margin-bottom: 10px;
       transition: border-color 0.2s;
+      user-select: text;
     }
-    .dtc-search-input:focus {
-      border-color: var(--accent);
-    }
-    .dtc-tab-filter {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 10px;
-    }
+    .dtc-search-input:focus { border-color: var(--amber); }
+    .dtc-tab-filter { display: flex; gap: 6px; margin-bottom: 10px; }
     .dtc-filter-btn {
       flex: 1;
       padding: 8px 4px;
       border-radius: 8px;
-      border: 1px solid var(--card-border);
-      background: rgba(255,255,255,0.04);
+      border: 1px solid #24242a;
+      background: #08080a;
       color: var(--text-dim);
       font-size: 0.72rem;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.2s;
     }
-    .dtc-filter-btn.active {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
-    }
-    .dtc-lib-results {
-      max-height: 380px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding-right: 2px;
-    }
-    .dtc-lib-item {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 10px;
-      padding: 10px 12px;
-      transition: background 0.15s;
-    }
-    .dtc-lib-item:hover {
-      background: rgba(255,255,255,0.06);
-    }
-    .dtc-badge-engine {
-      background: #ff5252;
-      color: #fff;
-      font-weight: 800;
-      font-size: 0.7rem;
-      padding: 2px 7px;
-      border-radius: 5px;
+    .dtc-filter-btn.active { background: var(--amber-soft); color: var(--amber); border-color: rgba(255, 138, 30, 0.5); }
+    .dtc-lib-results { max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 2px; }
+    .dtc-lib-item { background: #08080a; border: 1px solid #1a1a1f; border-radius: 10px; padding: 10px 12px; }
+    .dtc-badge-engine, .dtc-badge-trans {
+      font-family: var(--num);
+      font-size: 0.9rem;
+      padding: 0 7px;
+      border-radius: 4px;
       display: inline-block;
     }
-    .dtc-badge-trans {
-      background: #ff9100;
-      color: #000;
-      font-weight: 800;
-      font-size: 0.7rem;
-      padding: 2px 7px;
-      border-radius: 5px;
-      display: inline-block;
-    }
+    .dtc-badge-engine { background: var(--red); color: #fff; }
+    .dtc-badge-trans { background: var(--amber); color: #120800; }
 
     .btn-action {
       width: 100%;
-      padding: 12px;
+      padding: 13px 12px;
       border-radius: 12px;
-      border: 1px solid var(--card-border);
-      background: var(--card-bg);
-      color: #fff;
-      font-size: 0.85rem;
+      border: 1px solid #2a2a30;
+      background: var(--panel-2);
+      color: var(--text);
+      font-size: 0.86rem;
       font-weight: 700;
       cursor: pointer;
       margin-bottom: 8px;
@@ -871,48 +722,38 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+      transition: transform 0.1s, background 0.2s;
     }
-
+    .btn-action:active { transform: scale(0.98); }
     .btn-action:disabled { opacity: 0.5; }
-    .btn-primary { background: rgba(0, 230, 118, 0.15); border-color: rgba(0, 230, 118, 0.4); color: var(--vtec); }
-    .btn-danger { background: rgba(255, 45, 85, 0.15); border-color: rgba(255, 45, 85, 0.4); color: var(--accent); }
-    .btn-info { background: rgba(0, 240, 255, 0.15); border-color: var(--primary); color: var(--primary); }
-    .btn-ghost { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.15); color: var(--text); }
+    .btn-primary { background: rgba(255, 138, 30, 0.12); border-color: rgba(255, 138, 30, 0.5); color: var(--amber); }
+    .btn-danger { background: rgba(229, 50, 43, 0.1); border-color: rgba(229, 50, 43, 0.5); color: #ff5a52; }
+    .btn-info { background: rgba(255, 138, 30, 0.12); border-color: rgba(255, 138, 30, 0.5); color: var(--amber); }
+    .btn-ghost { background: var(--panel-2); border-color: #2a2a30; color: var(--text); }
     .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
     .btn-row .btn-action { flex: 1; min-width: 140px; margin: 0; }
     .badge-version {
-      font-size: 0.75rem;
-      color: var(--primary);
-      font-weight: 800;
-      background: rgba(0, 240, 255, 0.15);
-      border: 1px solid rgba(0, 240, 255, 0.4);
-      padding: 3px 9px;
-      border-radius: 6px;
+      font-family: var(--num);
+      font-size: 0.9rem;
+      color: var(--amber);
+      border: 1px solid rgba(255, 138, 30, 0.45);
+      padding: 0 8px;
+      border-radius: 5px;
     }
-    .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
-    .card-sub { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 14px; }
-    .sub-heading {
-      font-size: 0.75rem;
-      color: var(--text-dim);
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .sub-block { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--card-border); }
+    .sub-heading { font-size: 0.7rem; color: var(--amber); font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; }
+    .sub-block { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
     .sub-block-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .rec-btn.offline { opacity: 0.6; }
-    .rec-hint { font-size: 0.75rem; color: var(--warn); margin-top: 8px; font-weight: 600; }
 
-    /* Bottom Navigation Bar */
+    /* ------------------------------------------------------------------ Nav inferior */
     .bottom-nav {
       position: fixed;
       bottom: 0;
       left: 0;
       width: 100%;
-      background: rgba(10, 13, 20, 0.96);
+      background: rgba(5, 5, 6, 0.95);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border-top: 1px solid var(--card-border);
+      border-top: 1px solid var(--line);
       display: flex;
       padding: 8px 12px calc(8px + var(--safe-bottom)) 12px;
       z-index: 100;
@@ -923,12 +764,12 @@
       flex-direction: column;
       align-items: center;
       gap: 3px;
-      color: var(--text-dim);
+      color: var(--text-faint);
       background: none;
       border: none;
-      font: inherit;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 700;
+      letter-spacing: 0.4px;
       cursor: pointer;
       padding: 6px 0 4px 0;
       position: relative;
@@ -938,71 +779,44 @@
       content: '';
       position: absolute;
       top: -8px;
-      left: 25%;
-      right: 25%;
-      height: 3px;
-      border-radius: 0 0 3px 3px;
+      left: 30%;
+      right: 30%;
+      height: 2px;
+      border-radius: 0 0 2px 2px;
       background: transparent;
-      transition: background 0.2s;
+      transition: background 0.2s, box-shadow 0.2s;
     }
-    .nav-item.active {
-      color: var(--primary);
-    }
-    .nav-item.active::before {
-      background: var(--primary);
-    }
-    .nav-icon {
-      width: 24px;
-      height: 24px;
-    }
+    .nav-item.active { color: var(--amber); }
+    .nav-item.active::before { background: var(--amber); box-shadow: 0 0 8px rgba(255, 138, 30, 0.8); }
+    .nav-icon { width: 24px; height: 24px; }
 
-    /* Modal */
+    /* ------------------------------------------------------------------ Modales */
     .modal-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.82);
       z-index: 200;
       align-items: center;
       justify-content: center;
       padding: 20px;
     }
-    .modal-overlay.active {
-      display: flex;
-    }
+    .modal-overlay.active { display: flex; }
     .modal-card {
-      background: #141a24;
-      border: 1px solid var(--card-border);
-      border-radius: 20px;
+      background: var(--panel);
+      border: 1px solid #2a2a30;
+      border-top: 2px solid var(--amber);
+      border-radius: 18px;
       padding: 20px;
-      max-width: 320px;
+      max-width: 330px;
       width: 100%;
       text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
     }
-    .modal-title {
-      font-size: 1.1rem;
-      font-weight: 800;
-      margin-bottom: 8px;
-      color: #fff;
-    }
-    .modal-text {
-      font-size: 0.85rem;
-      color: var(--text-dim);
-      margin-bottom: 16px;
-      line-height: 1.4;
-    }
-    .modal-actions {
-      display: flex;
-      gap: 8px;
-    }
-    .modal-btn {
-      flex: 1;
-      padding: 10px;
-      border-radius: 10px;
-      border: none;
-      font-weight: 700;
-      cursor: pointer;
-    }
+    .modal-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 8px; color: var(--text); }
+    .modal-text { font-size: 0.86rem; color: var(--text-dim); margin-bottom: 16px; line-height: 1.45; }
+    .modal-actions { display: flex; gap: 8px; }
+    .modal-btn { flex: 1; padding: 11px; border-radius: 10px; border: none; font-weight: 800; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -1012,7 +826,7 @@
     <div class="brand">
       <img src="icon-192.png" class="brand-logo" alt="Civic OBD">
       <div>
-        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD2</span> <span class="brand-version" id="brandVersionBadge">v27</span></div>
+        <div class="brand-title">CIVIC '99 <span class="brand-badge">OBD</span> <span class="brand-version" id="brandVersionBadge">v28</span></div>
       </div>
     </div>
     <button id="btnConnect" class="btn-connect" onclick="toggleBleConnection()">
@@ -1022,69 +836,20 @@
   </header>
 
   <!-- Banner de instalación PWA para uso 100% offline -->
-  <div id="installBanner" style="display:none; align-items:center; justify-content:space-between; background:rgba(0, 229, 255, 0.12); border:1px solid rgba(0, 229, 255, 0.3); border-radius:12px; margin: 8px 12px; padding: 10px 14px; font-size:0.85rem; color:#f0f4f8; gap:10px;">
+  <div id="installBanner" style="display:none; align-items:center; justify-content:space-between; background:rgba(255, 138, 30, 0.1); border:1px solid rgba(255, 138, 30, 0.35); border-radius:12px; margin: 8px 12px; padding: 10px 14px; font-size:0.85rem; color:#f0f4f8; gap:10px;">
     <span>📱 Instalar app para acceso rápido 100% sin conexión / datos</span>
-    <button id="btnInstall" style="background:var(--ac-color); color:#0a0d14; border:none; padding:8px 16px; border-radius:8px; font-weight:700; cursor:pointer; flex-shrink:0;">Instalar</button>
+    <button id="btnInstall" style="background:var(--amber); color:#120800; border:none; padding:8px 16px; border-radius:8px; font-weight:700; cursor:pointer; flex-shrink:0;">Instalar</button>
   </div>
 
   <!-- TAB 1: DASHBOARD -->
   <main id="tabDashboard" class="tab-content active">
 
-    <!-- Triple Cluster: Tacómetro (Izq), Velocímetro Grande (Centro), Temperatura (Der) -->
+    <!-- Cluster: Tacómetro (izq), Velocímetro (centro), Temperatura (der). Los SVG se dibujan con buildGauge() -->
     <div class="triple-cluster">
-      
-      <!-- RELOJ IZQUIERDO: TACÓMETRO RPM -->
+      <div id="pillLink" class="ecu-link">ECU --</div>
       <div class="pod-side pod-rpm">
         <div class="pod-svg-wrap">
-          <svg class="pod-svg" viewBox="0 0 200 200">
-            <defs>
-              <linearGradient id="rpmGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#00e676"/>
-                <stop offset="65%" stop-color="#ffb300"/>
-                <stop offset="85%" stop-color="#ff2d55"/>
-              </linearGradient>
-              <filter id="rpmGlow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="3" result="blur"/>
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-            </defs>
-
-            <!-- Fondo del Arco (260 deg, R=72) -->
-            <path d="M 44.85 146.28 A 72 72 0 1 1 155.15 146.28" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="10" stroke-linecap="round"/>
-            
-            <!-- Redline Zone (6800 a 8000 RPM) -->
-            <path d="M 172 101.3 A 72 72 0 0 1 155.15 146.28" fill="none" stroke="rgba(255,45,85,0.35)" stroke-width="10" stroke-linecap="round"/>
-
-            <!-- Arco Dinámico RPM -->
-            <path id="gaugeProgress" d="M 44.85 146.28 A 72 72 0 1 1 155.15 146.28" fill="none" stroke="url(#rpmGrad)" stroke-width="10" stroke-linecap="round"
-                  stroke-dasharray="326.7" stroke-dashoffset="326.7" filter="url(#rpmGlow)" style="transition: stroke-dashoffset 0.08s linear;"/>
-
-            <!-- Marcas Radiales Ticks -->
-            <g stroke-linecap="round">
-              <line x1="54.0" y1="138.6" x2="47.9" y2="143.7" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-              <line x1="40.5" y1="107.8" x2="32.6" y2="108.9" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-              <line x1="45.6" y1="74.6" x2="38.4" y2="71.3" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-              <line x1="67.8" y1="49.4" x2="63.5" y2="42.6" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-              <line x1="100.0" y1="40.0" x2="100.0" y2="32.0" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-              <line x1="132.2" y1="49.4" x2="136.5" y2="42.6" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-              <line x1="154.4" y1="74.6" x2="161.6" y2="71.3" stroke="#ff2d55" stroke-width="1.8"/>
-              <line x1="159.5" y1="107.8" x2="167.4" y2="108.9" stroke="#ff2d55" stroke-width="2.2"/>
-              <line x1="146.0" y1="138.6" x2="152.1" y2="143.7" stroke="#ff2d55" stroke-width="2.2"/>
-            </g>
-
-            <!-- Números 0 a 8 -->
-            <g>
-              <text x="61.7" y="132.1" fill="#8b9bb4" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central">0</text>
-              <text x="50.4" y="106.5" fill="#8b9bb4" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central">1</text>
-              <text x="54.7" y="78.9" fill="#8b9bb4" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central">2</text>
-              <text x="73.1" y="57.8" fill="#8b9bb4" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central">3</text>
-              <text x="100.0" y="50.0" fill="#8b9bb4" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central">4</text>
-              <text x="126.9" y="57.8" fill="#8b9bb4" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central">5</text>
-              <text x="145.3" y="78.9" fill="#8b9bb4" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central">6</text>
-              <text x="149.6" y="106.5" fill="#ff2d55" font-size="10" font-weight="800" text-anchor="middle" dominant-baseline="central">7</text>
-              <text x="138.3" y="132.1" fill="#ff2d55" font-size="10" font-weight="800" text-anchor="middle" dominant-baseline="central">8</text>
-            </g>
-          </svg>
+          <svg id="gaugeRpm" class="pod-svg" viewBox="0 0 200 200" aria-label="Tacómetro"></svg>
           <div class="pod-inner-info">
             <div id="valRpm" class="pod-val-side">0</div>
             <div class="pod-unit-lbl">RPM</div>
@@ -1092,264 +857,175 @@
         </div>
       </div>
 
-      <!-- RELOJ CENTRAL: VELOCÍMETRO GRANDE (KM/H) -->
       <div class="pod-center pod-vss">
         <div class="pod-svg-wrap">
-          <svg class="pod-svg" viewBox="0 0 240 240">
-            <defs>
-              <linearGradient id="vssGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#00f0ff"/>
-                <stop offset="65%" stop-color="#ffb300"/>
-                <stop offset="85%" stop-color="#ff2d55"/>
-              </linearGradient>
-              <filter id="vssGlow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="4" result="blur"/>
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-            </defs>
-
-            <!-- Fondo del Arco (260 deg, R=92) -->
-            <path d="M 49.52 179.14 A 92 92 0 1 1 190.48 179.14" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="13" stroke-linecap="round"/>
-            
-            <!-- Zona Alta Velocidad (160 a 220 km/h) -->
-            <path d="M 198.9 72.8 A 92 92 0 0 1 190.48 179.14" fill="none" stroke="rgba(255,45,85,0.35)" stroke-width="13" stroke-linecap="round"/>
-
-            <!-- Arco Dinámico KM/H -->
-            <path id="gaugeVssProgress" d="M 49.52 179.14 A 92 92 0 1 1 190.48 179.14" fill="none" stroke="url(#vssGrad)" stroke-width="13" stroke-linecap="round"
-                  stroke-dasharray="417.5" stroke-dashoffset="417.5" filter="url(#vssGlow)" style="transition: stroke-dashoffset 0.08s linear;"/>
-
-            <!-- Marcas Radiales (0 a 220) -->
-            <g stroke-linecap="round">
-              <line x1="60.2" y1="170.1" x2="52.6" y2="176.6" stroke="rgba(255,255,255,0.45)" stroke-width="1.8"/>
-              <line x1="45.2" y1="142.0" x2="35.6" y2="144.8" stroke="rgba(255,255,255,0.3)" stroke-width="1.4"/>
-              <line x1="42.6" y1="110.1" x2="32.7" y2="108.9" stroke="rgba(255,255,255,0.45)" stroke-width="1.8"/>
-              <line x1="53.1" y1="79.9" x2="44.5" y2="74.8" stroke="rgba(255,255,255,0.3)" stroke-width="1.4"/>
-              <line x1="74.8" y1="56.5" x2="69.0" y2="48.3" stroke="rgba(255,255,255,0.45)" stroke-width="1.8"/>
-              <line x1="104.0" y1="43.7" x2="102.0" y2="33.9" stroke="rgba(255,255,255,0.3)" stroke-width="1.4"/>
-              <line x1="136.0" y1="43.7" x2="138.0" y2="33.9" stroke="rgba(255,255,255,0.45)" stroke-width="1.8"/>
-              <line x1="165.2" y1="56.5" x2="171.0" y2="48.3" stroke="rgba(255,255,255,0.3)" stroke-width="1.4"/>
-              <line x1="186.9" y1="79.9" x2="195.5" y2="74.8" stroke="#ff2d55" stroke-width="1.8"/>
-              <line x1="197.4" y1="110.1" x2="207.3" y2="108.9" stroke="#ff2d55" stroke-width="2.2"/>
-              <line x1="194.8" y1="142.0" x2="204.4" y2="144.8" stroke="#ff2d55" stroke-width="2.2"/>
-              <line x1="179.8" y1="170.1" x2="187.4" y2="176.6" stroke="#ff2d55" stroke-width="2.2"/>
-            </g>
-
-            <!-- Números de Velocidad (0 a 220) -->
-            <g>
-              <text x="69.4" y="162.4" fill="#8b9bb4" font-size="11" font-weight="700" text-anchor="middle" dominant-baseline="central">0</text>
-              <text x="56.7" y="138.6" fill="#8b9bb4" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central">20</text>
-              <text x="54.5" y="111.6" fill="#8b9bb4" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central">40</text>
-              <text x="63.4" y="86.1" fill="#8b9bb4" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central">60</text>
-              <text x="81.7" y="66.2" fill="#8b9bb4" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central">80</text>
-              <text x="106.5" y="55.4" fill="#8b9bb4" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central">100</text>
-              <text x="133.5" y="55.4" fill="#8b9bb4" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central">120</text>
-              <text x="158.3" y="66.2" fill="#8b9bb4" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central">140</text>
-              <text x="176.6" y="86.1" fill="#ff2d55" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central">160</text>
-              <text x="185.5" y="111.6" fill="#ff2d55" font-size="10" font-weight="800" text-anchor="middle" dominant-baseline="central">180</text>
-              <text x="183.3" y="138.6" fill="#ff2d55" font-size="10" font-weight="800" text-anchor="middle" dominant-baseline="central">200</text>
-              <text x="170.6" y="162.4" fill="#ff2d55" font-size="10" font-weight="800" text-anchor="middle" dominant-baseline="central">220</text>
-            </g>
-          </svg>
+          <svg id="gaugeVss" class="pod-svg" viewBox="0 0 200 200" aria-label="Velocímetro"></svg>
           <div class="pod-inner-info">
             <div id="valVss" class="pod-val-center">0</div>
-            <div class="pod-unit-lbl">KM / H</div>
+            <div class="pod-unit-lbl">km/h</div>
           </div>
         </div>
       </div>
 
-      <!-- RELOJ DERECHO: TEMPERATURA REFRIGERANTE (ECT) -->
       <div class="pod-side pod-temp">
         <div class="pod-svg-wrap">
-          <svg class="pod-svg" viewBox="0 0 200 200">
-            <defs>
-              <linearGradient id="ectGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#00b4d8"/>
-                <stop offset="45%" stop-color="#00e676"/>
-                <stop offset="75%" stop-color="#ffb300"/>
-                <stop offset="90%" stop-color="#ff2d55"/>
-              </linearGradient>
-              <filter id="ectGlow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="3" result="blur"/>
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-            </defs>
-
-            <!-- Fondo del Arco (260 deg, R=72) -->
-            <path d="M 44.85 146.28 A 72 72 0 1 1 155.15 146.28" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="10" stroke-linecap="round"/>
-            
-            <!-- Zona de Sobrecalentamiento (>102°C) -->
-            <path d="M 169.2 80.2 A 72 72 0 0 1 155.15 146.28" fill="none" stroke="rgba(255,45,85,0.35)" stroke-width="10" stroke-linecap="round"/>
-
-            <!-- Arco Dinámico ECT -->
-            <path id="gaugeEctProgress" d="M 44.85 146.28 A 72 72 0 1 1 155.15 146.28" fill="none" stroke="url(#ectGrad)" stroke-width="10" stroke-linecap="round"
-                  stroke-dasharray="326.7" stroke-dashoffset="326.7" filter="url(#ectGlow)" style="transition: stroke-dashoffset 0.08s linear;"/>
-
-            <!-- Marcas Radiales (C a H) -->
-            <g stroke-linecap="round">
-              <line x1="54.0" y1="138.6" x2="47.9" y2="143.7" stroke="#00b4d8" stroke-width="1.8"/>
-              <line x1="40.1" y1="96.5" x2="32.1" y2="96.0" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-              <line x1="58.8" y1="56.4" x2="53.3" y2="50.5" stroke="#00e676" stroke-width="1.8"/>
-              <line x1="100.0" y1="40.0" x2="100.0" y2="32.0" stroke="#00e676" stroke-width="2.2"/>
-              <line x1="141.2" y1="56.4" x2="146.7" y2="50.5" stroke="#ffb300" stroke-width="1.8"/>
-              <line x1="159.9" y1="96.5" x2="167.9" y2="96.0" stroke="#ff2d55" stroke-width="1.8"/>
-              <line x1="146.0" y1="138.6" x2="152.1" y2="143.7" stroke="#ff2d55" stroke-width="2.2"/>
-            </g>
-
-            <!-- Etiquetas de Temperatura -->
-            <g>
-              <text x="63.2" y="130.9" fill="#00b4d8" font-size="11" font-weight="800" text-anchor="middle" dominant-baseline="central">C</text>
-              <text x="56.5" y="79.7" fill="#8b9bb4" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central">70</text>
-              <text x="100.0" y="52.0" fill="#00e676" font-size="10" font-weight="800" text-anchor="middle" dominant-baseline="central">90</text>
-              <text x="143.5" y="79.7" fill="#ffb300" font-size="10" font-weight="800" text-anchor="middle" dominant-baseline="central">110</text>
-              <text x="136.8" y="130.9" fill="#ff1744" font-size="11" font-weight="800" text-anchor="middle" dominant-baseline="central">H</text>
-            </g>
-          </svg>
+          <svg id="gaugeEct" class="pod-svg" viewBox="0 0 200 200" aria-label="Temperatura del refrigerante"></svg>
           <div class="pod-inner-info">
             <div id="valEctGauge" class="pod-val-side">0</div>
-            <div class="pod-unit-lbl">°C ECT</div>
+            <div class="pod-unit-lbl">°C</div>
           </div>
         </div>
       </div>
-
     </div>
 
-    <!-- Tira de Testigos / Warning Lights (CEL, VTEC, FRENO, A/C, P/N, ECU) -->
+    <!-- Testigos -->
     <div class="warning-indicators-bar">
-      <div id="warnCelBadge" class="warn-badge">
-        <svg width="14" height="12" viewBox="0 0 22 14" fill="currentColor">
+      <div id="warnCelBadge" class="warn-badge" title="Check Engine">
+        <svg width="18" height="12" viewBox="0 0 22 14" aria-hidden="true">
           <path d="M 2 7 L 6 3 L 14 3 L 18 7 L 18 13 L 2 13 Z M 20 6 L 22 6 L 22 10 L 20 10 Z M 0 6 L 2 6 L 2 10 L 0 10 Z" fill="none" stroke="currentColor" stroke-width="1.8"/>
         </svg>
         <span>CHECK</span>
       </div>
       <div id="warnVtecBadge" class="warn-badge">VTEC</div>
-      <div id="warnBrakeBadge" class="warn-badge">BRAKE</div>
+      <div id="warnBrakeBadge" class="warn-badge" title="Freno">
+        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+          <circle cx="12" cy="12" r="6.5"/><path d="M12 9v3.2"/><circle cx="12" cy="15" r="0.6" fill="currentColor"/>
+          <path d="M4.5 6.5a10 10 0 0 0 0 11M19.5 6.5a10 10 0 0 1 0 11"/>
+        </svg>
+        <span>BRAKE</span>
+      </div>
       <div id="warnAcBadge" class="warn-badge">A/C</div>
       <div id="warnPnBadge" class="warn-badge">P/N</div>
-      <div id="pillLink" class="warn-badge">ECU --</div>
     </div>
 
-    <!-- Section A: Motor & Marchas -->
-    <div class="grid-title">Motor</div>
-    <div class="sensor-grid">
-      <div class="sensor-card">
-        <div class="sensor-label">Marcha (Transmisión)</div>
-        <div class="sensor-val-wrap">
-          <span id="valGear" class="sensor-val" style="color: #00f0ff;">N</span>
-          <span class="sensor-unit">AT</span>
+    <!-- Motor -->
+    <section class="sensor-panel">
+      <div class="grid-title">Motor</div>
+      <div class="sensor-grid">
+        <div class="sensor-card">
+          <div class="sensor-label">Marcha</div>
+          <div class="sensor-val-wrap">
+            <span id="valGear" class="sensor-val">N</span>
+            <span class="sensor-unit">AT</span>
+          </div>
+          <div class="sensor-bar-bg"><div id="barGear" class="sensor-bar-fill"></div></div>
         </div>
-        <div class="sensor-bar-bg"><div id="barGear" class="sensor-bar-fill" style="width: 20%; background: #00f0ff;"></div></div>
-      </div>
 
-      <div class="sensor-card">
-        <div class="sensor-label">Acelerador (TPS)</div>
-        <div class="sensor-val-wrap">
-          <span id="valTps" class="sensor-val">0</span>
-          <span class="sensor-unit">%</span>
+        <div class="sensor-card">
+          <div class="sensor-label">Acelerador (TPS)</div>
+          <div class="sensor-val-wrap">
+            <span id="valTps" class="sensor-val">0</span>
+            <span class="sensor-unit">%</span>
+          </div>
+          <div class="sensor-bar-bg"><div id="barTps" class="sensor-bar-fill"></div></div>
         </div>
-        <div class="sensor-bar-bg"><div id="barTps" class="sensor-bar-fill"></div></div>
-      </div>
 
-      <div class="sensor-card">
-        <div class="sensor-label">Válvula Ralentí (IACV)</div>
-        <div class="sensor-val-wrap">
-          <span id="valIacv" class="sensor-val">0</span>
-          <span class="sensor-unit">%</span>
+        <div class="sensor-card">
+          <div class="sensor-label">Válvula ralentí (IACV)</div>
+          <div class="sensor-val-wrap">
+            <span id="valIacv" class="sensor-val">0</span>
+            <span class="sensor-unit">%</span>
+          </div>
+          <div class="sensor-bar-bg"><div id="barIacv" class="sensor-bar-fill"></div></div>
         </div>
-        <div class="sensor-bar-bg"><div id="barIacv" class="sensor-bar-fill"></div></div>
-      </div>
 
-      <div class="sensor-card" id="cardBaro">
-        <div class="sensor-label">Presión Barométrica</div>
-        <div class="sensor-val-wrap">
-          <span id="valBaro" class="sensor-val">101</span>
-          <span class="sensor-unit">kPa</span>
+        <div class="sensor-card" id="cardBaro">
+          <div class="sensor-label">Presión barométrica</div>
+          <div class="sensor-val-wrap">
+            <span id="valBaro" class="sensor-val">101</span>
+            <span class="sensor-unit">kPa</span>
+          </div>
+          <div class="sensor-sub" id="valKnock">Knock: 0</div>
         </div>
-        <div class="sensor-sub" id="valKnock">Knock: 0</div>
       </div>
-    </div>
+    </section>
 
-    <!-- Section B: Admisión & Eléctricos -->
-    <div class="grid-title">Temperaturas, presiones y batería</div>
-    <div class="sensor-grid">
-      <div class="sensor-card" id="cardEct">
-        <div class="sensor-label">Refrigerante (ECT)</div>
-        <div class="sensor-val-wrap">
-          <span id="valEct" class="sensor-val">--</span>
-          <span class="sensor-unit">°C</span>
+    <!-- Temperaturas, presiones y batería -->
+    <section class="sensor-panel">
+      <div class="grid-title">Temperaturas y eléctrico</div>
+      <div class="sensor-grid">
+        <div class="sensor-card" id="cardEct">
+          <div class="sensor-label">Refrigerante (ECT)</div>
+          <div class="sensor-val-wrap">
+            <span id="valEct" class="sensor-val">--</span>
+            <span class="sensor-unit">°C</span>
+          </div>
+          <div class="sensor-bar-bg"><div id="barEct" class="sensor-bar-fill"></div></div>
         </div>
-        <div class="sensor-bar-bg"><div id="barEct" class="sensor-bar-fill"></div></div>
-      </div>
 
-      <div class="sensor-card" id="cardIat">
-        <div class="sensor-label">Aire Admisión (IAT)</div>
-        <div class="sensor-val-wrap">
-          <span id="valIat" class="sensor-val">--</span>
-          <span class="sensor-unit">°C</span>
+        <div class="sensor-card" id="cardIat">
+          <div class="sensor-label">Aire admisión (IAT)</div>
+          <div class="sensor-val-wrap">
+            <span id="valIat" class="sensor-val">--</span>
+            <span class="sensor-unit">°C</span>
+          </div>
+          <div class="sensor-bar-bg"><div id="barIat" class="sensor-bar-fill"></div></div>
         </div>
-        <div class="sensor-bar-bg"><div id="barIat" class="sensor-bar-fill"></div></div>
-      </div>
 
-      <div class="sensor-card">
-        <div class="sensor-label">Presión Múltiple (MAP)</div>
-        <div class="sensor-val-wrap">
-          <span id="valMap" class="sensor-val">0</span>
-          <span class="sensor-unit">kPa</span>
+        <div class="sensor-card">
+          <div class="sensor-label">Presión múltiple (MAP)</div>
+          <div class="sensor-val-wrap">
+            <span id="valMap" class="sensor-val">0</span>
+            <span class="sensor-unit">kPa</span>
+          </div>
+          <div class="sensor-sub" id="valMapInHg">0.0 inHg Vac</div>
         </div>
-        <div class="sensor-sub" id="valMapInHg">0.0 inHg Vac</div>
-      </div>
 
-      <div class="sensor-card" id="cardBatt">
-        <div class="sensor-label">Batería (Voltaje)</div>
-        <div class="sensor-val-wrap">
-          <span id="valBatt" class="sensor-val">0.0</span>
-          <span class="sensor-unit">V</span>
+        <div class="sensor-card" id="cardBatt">
+          <div class="sensor-label">Batería</div>
+          <div class="sensor-val-wrap">
+            <span id="valBatt" class="sensor-val">0.0</span>
+            <span class="sensor-unit">V</span>
+          </div>
+          <div class="sensor-sub" id="valEld">ELD: 0.0 A | ALT: 0%</div>
         </div>
-        <div class="sensor-sub" id="valEld">ELD: 0.0 A | ALT: 0%</div>
       </div>
-    </div>
+    </section>
 
-    <!-- Section C: Inyección & Combustible -->
-    <div class="grid-title">Combustible y encendido</div>
-    <div class="sensor-grid">
-      <div class="sensor-card">
-        <div class="sensor-label">Tiempo Inyección</div>
-        <div class="sensor-val-wrap">
-          <span id="valInj" class="sensor-val">0.00</span>
-          <span class="sensor-unit">ms</span>
+    <!-- Combustible y encendido -->
+    <section class="sensor-panel">
+      <div class="grid-title">Combustible y encendido</div>
+      <div class="sensor-grid">
+        <div class="sensor-card">
+          <div class="sensor-label">Tiempo inyección</div>
+          <div class="sensor-val-wrap">
+            <span id="valInj" class="sensor-val">0.00</span>
+            <span class="sensor-unit">ms</span>
+          </div>
         </div>
-      </div>
 
-      <div class="sensor-card">
-        <div class="sensor-label">Avance Encendido</div>
-        <div class="sensor-val-wrap">
-          <span id="valIgn" class="sensor-val">0.0</span>
-          <span class="sensor-unit">°BTDC</span>
+        <div class="sensor-card">
+          <div class="sensor-label">Avance encendido</div>
+          <div class="sensor-val-wrap">
+            <span id="valIgn" class="sensor-val">0.0</span>
+            <span class="sensor-unit">°BTDC</span>
+          </div>
         </div>
-      </div>
 
-      <div class="sensor-card">
-        <div class="sensor-label">Sensor O2 Primario (S1)</div>
-        <div class="sensor-val-wrap">
-          <span id="valO2" class="sensor-val">0.00</span>
-          <span class="sensor-unit">V</span>
+        <div class="sensor-card">
+          <div class="sensor-label">Sensor O2 primario</div>
+          <div class="sensor-val-wrap">
+            <span id="valO2" class="sensor-val">0.00</span>
+            <span class="sensor-unit">V</span>
+          </div>
         </div>
-      </div>
 
-      <div class="sensor-card">
-        <div class="sensor-label">Sensor O2 Secundario (S2)</div>
-        <div class="sensor-val-wrap">
-          <span id="valO2Sec" class="sensor-val">0.00</span>
-          <span class="sensor-unit">V</span>
+        <div class="sensor-card">
+          <div class="sensor-label">Sensor O2 secundario</div>
+          <div class="sensor-val-wrap">
+            <span id="valO2Sec" class="sensor-val">0.00</span>
+            <span class="sensor-unit">V</span>
+          </div>
         </div>
-      </div>
 
-      <div class="sensor-card" id="cardTrim">
-        <div class="sensor-label">Ajuste Mezcla (SFT / LFT)</div>
-        <div class="sensor-val-wrap">
-          <span id="valTrim" class="sensor-val" style="font-size:1.25rem;">0% / 0%</span>
+        <div class="sensor-card" id="cardTrim">
+          <div class="sensor-label">Ajuste de mezcla (SFT / LFT)</div>
+          <div class="sensor-val-wrap">
+            <span id="valTrim" class="sensor-val">0% / 0%</span>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   </main>
 
   <!-- TAB 2: DATALOGGER -->
@@ -1381,7 +1057,7 @@
     <div class="run-card">
       <div class="run-header">
         <span class="run-title">TIRADAS DE ACELERACIÓN</span>
-        <span id="runLaunchStatus" style="font-size:0.75rem; color:var(--text-dim); font-weight:700;">Listo para despegar</span>
+        <span id="runLaunchStatus" style="font-size:0.72rem; color:var(--text-dim); font-weight:700; text-align:right;">Listo para despegar</span>
       </div>
       <div class="run-grid">
         <div class="run-box">
@@ -1401,7 +1077,7 @@
 
     <!-- Live Rolling Chart -->
     <div class="chart-container">
-      <div class="chart-title">Gráfica en Vivo: RPM y TPS</div>
+      <div class="chart-title">Gráfica en vivo <span class="chart-key" style="color:var(--amber)">RPM</span><span class="chart-key" style="color:var(--text)">TPS</span></div>
       <canvas id="liveChart" width="600" height="240"></canvas>
     </div>
 
@@ -1476,7 +1152,7 @@
         <div class="sub-block">
           <div class="sub-block-head">
             <span class="sub-heading">Actualizaciones</span>
-            <span id="pwaVersionTag" class="badge-version">v27</span>
+            <span id="pwaVersionTag" class="badge-version">v28</span>
           </div>
           <div id="updateStatusText" style="font-size:0.78rem; color:var(--text-dim); margin-bottom:12px; line-height:1.4;">
             Esta app funciona 100% offline. Toca el botón para verificar con GitHub si hay una nueva versión disponible.
@@ -1522,7 +1198,7 @@
       <div class="modal-title">¿Borrar Códigos?</div>
       <div class="modal-text">Esto enviará el comando de reinicio a la ECU Honda para apagar la luz Check Engine y borrar las fallas almacenadas.<br><br><span style="color: var(--amber); font-weight: bold; font-size: 0.8rem;">Recomendado:</span> <span style="font-size: 0.8rem; color: var(--text-dim);">Motor apagado con la llave en posición ON (II).</span></div>
       <div class="modal-actions">
-        <button class="modal-btn" style="background: #2a3444; color: #fff;" onclick="closeModal()">Cancelar</button>
+        <button class="modal-btn" style="background: #24242a; color: var(--text);" onclick="closeModal()">Cancelar</button>
         <button class="modal-btn" style="background: var(--accent); color: #fff;" onclick="executeClearDtcs()">Borrar</button>
       </div>
     </div>
@@ -1534,7 +1210,7 @@
       <div id="infoModalTitle" class="modal-title"></div>
       <div id="infoModalText" class="modal-text"></div>
       <div class="modal-actions">
-        <button class="modal-btn" style="background: var(--primary); color: #0a0d14;" onclick="closeInfoModal()">Entendido</button>
+        <button class="modal-btn" style="background: var(--amber); color: #120800;" onclick="closeInfoModal()">Entendido</button>
       </div>
     </div>
   </div>
@@ -1584,7 +1260,7 @@
     // =========================================================================
     // SISTEMA DE ACTUALIZACIÓN MANUAL Y GESTIÓN DE CACHÉ PWA
     // =========================================================================
-    const APP_CURRENT_VERSION = 'v27';
+    const APP_CURRENT_VERSION = 'v28';
     let toastTimeout = null;
 
     function showToast(msg, duration = 3200, type = 'info') {
@@ -1852,6 +1528,7 @@
       const text = document.getElementById('bleStatusText');
       const icon = document.getElementById('bleIcon');
       if (connected) {
+        if (!btn.classList.contains('connected')) sweepGauges();
         btn.classList.add('connected');
         text.textContent = 'Conectado';
         icon.className = 'status-dot-circle connected';
@@ -1862,6 +1539,7 @@
         text.textContent = 'Conectar BLE';
         icon.className = 'status-dot-circle';
         document.getElementById('pillLink').textContent = 'ECU OFF';
+        document.getElementById('pillLink').style.color = '';
         document.getElementById('btnRecord').classList.add('offline');
         document.getElementById('recHint').hidden = false;
         clearLevels();
@@ -2090,37 +1768,160 @@
     // =========================================================================
     // UI DASHBOARD RENDERER
     // =========================================================================
+    // =========================================================================
+    // RELOJES ANALÓGICOS (SVG generado) — estilo tablero OEM
+    // =========================================================================
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const GAUGE_SWEEP = 240;           // grados de recorrido de la aguja
+    const GAUGE_START = -GAUGE_SWEEP / 2;
+
+    const GAUGES = {
+      rpm: {
+        svg: 'gaugeRpm', min: 0, max: 8000, minorStep: 500, majorStep: 1000, redFrom: 6800,
+        label: v => String(v / 1000), labelSize: 19
+      },
+      vss: {
+        svg: 'gaugeVss', min: 0, max: 220, minorStep: 10, majorStep: 20,
+        label: v => String(v), labelSize: 11.5
+      },
+      ect: {
+        svg: 'gaugeEct', min: 40, max: 130, minorStep: 5, majorStep: 15, redFrom: 108,
+        labels: [[40, 'C'], [85, '85'], [130, 'H']], labelSize: 19, mark: 90
+      }
+    };
+
+    function svgEl(tag, attrs, parent) {
+      const el = document.createElementNS(SVG_NS, tag);
+      for (const k in attrs) el.setAttribute(k, attrs[k]);
+      if (parent) parent.appendChild(el);
+      return el;
+    }
+    function polar(r, deg) {
+      const a = deg * Math.PI / 180;
+      return [100 + r * Math.sin(a), 100 - r * Math.cos(a)];
+    }
+    function valueToAngle(cfg, v) {
+      const pct = Math.min(Math.max((v - cfg.min) / (cfg.max - cfg.min), 0), 1);
+      return GAUGE_START + pct * GAUGE_SWEEP;
+    }
+    function arcPath(r, a0, a1) {
+      const [x0, y0] = polar(r, a0);
+      const [x1, y1] = polar(r, a1);
+      return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+    }
+
+    function buildGauge(key) {
+      const cfg = GAUGES[key];
+      const svg = document.getElementById(cfg.svg);
+      if (!svg) return;
+      svg.textContent = '';
+      const id = 'g' + key;
+
+      const defs = svgEl('defs', {}, svg);
+      const face = svgEl('radialGradient', { id: id + 'Face', cx: '50%', cy: '42%', r: '62%' }, defs);
+      svgEl('stop', { offset: '0%', 'stop-color': '#1b1b20' }, face);
+      svgEl('stop', { offset: '75%', 'stop-color': '#09090b' }, face);
+      svgEl('stop', { offset: '100%', 'stop-color': '#040405' }, face);
+      const bezel = svgEl('linearGradient', { id: id + 'Bezel', x1: '0', y1: '0', x2: '0', y2: '1' }, defs);
+      svgEl('stop', { offset: '0%', 'stop-color': '#3a3a42' }, bezel);
+      svgEl('stop', { offset: '50%', 'stop-color': '#16161a' }, bezel);
+      svgEl('stop', { offset: '100%', 'stop-color': '#2a2a30' }, bezel);
+
+      // Carátula y bisel
+      svgEl('circle', { cx: 100, cy: 100, r: 97, fill: `url(#${id}Bezel)` }, svg);
+      svgEl('circle', { cx: 100, cy: 100, r: 93, fill: `url(#${id}Face)` }, svg);
+      svgEl('circle', { cx: 100, cy: 100, r: 93, fill: 'none', stroke: 'rgba(0,0,0,0.9)', 'stroke-width': 2 }, svg);
+
+      // Zona roja
+      if (cfg.redFrom !== undefined) {
+        svgEl('path', {
+          d: arcPath(84, valueToAngle(cfg, cfg.redFrom), valueToAngle(cfg, cfg.max)),
+          fill: 'none', stroke: '#e5322b', 'stroke-width': 5, opacity: 0.9
+        }, svg);
+      }
+
+      // Ticks
+      const ticks = svgEl('g', { 'stroke-linecap': 'round' }, svg);
+      for (let v = cfg.min; v <= cfg.max + 1e-9; v += cfg.minorStep) {
+        const a = valueToAngle(cfg, v);
+        const major = Math.abs(((v - cfg.min) / cfg.majorStep) - Math.round((v - cfg.min) / cfg.majorStep)) < 1e-6;
+        const red = cfg.redFrom !== undefined && v >= cfg.redFrom;
+        const [x0, y0] = polar(major ? 74 : 79, a);
+        const [x1, y1] = polar(88, a);
+        svgEl('line', {
+          x1: x0.toFixed(2), y1: y0.toFixed(2), x2: x1.toFixed(2), y2: y1.toFixed(2),
+          stroke: red ? '#ff4a3d' : (major ? '#f2f2f0' : 'rgba(242,242,240,0.55)'),
+          'stroke-width': major ? 2.6 : 1.3
+        }, ticks);
+      }
+      // Marca de temperatura normal
+      if (cfg.mark !== undefined) {
+        const [mx, my] = polar(66, valueToAngle(cfg, cfg.mark));
+        svgEl('circle', { cx: mx.toFixed(2), cy: my.toFixed(2), r: 2.4, fill: '#ff8a1e' }, svg);
+      }
+
+      // Numerales
+      const labels = cfg.labels || (() => {
+        const out = [];
+        for (let v = cfg.min; v <= cfg.max; v += cfg.majorStep) out.push([v, cfg.label(v)]);
+        return out;
+      })();
+      const lblR = cfg.labelSize > 14 ? 58 : 63;
+      const lg = svgEl('g', {
+        'font-family': "'Barlow Condensed', 'Arial Narrow', sans-serif", 'font-size': cfg.labelSize,
+        'text-anchor': 'middle', 'dominant-baseline': 'central'
+      }, svg);
+      labels.forEach(([v, txt]) => {
+        const [x, y] = polar(lblR, valueToAngle(cfg, v));
+        const red = cfg.redFrom !== undefined && v >= cfg.redFrom;
+        const t = svgEl('text', { x: x.toFixed(2), y: y.toFixed(2), fill: red ? '#ff4a3d' : '#f2f2f0' }, lg);
+        t.textContent = txt;
+      });
+
+      // Aguja (apunta hacia arriba; se rota con CSS alrededor de 100,100)
+      const needle = svgEl('g', { id: id + 'Needle', class: 'gauge-needle' }, svg);
+      svgEl('path', { d: 'M 98.4 112 L 99.4 20 L 100.6 20 L 101.6 112 Z', fill: '#ff8a1e' }, needle);
+      svgEl('path', { d: 'M 99.4 20 L 100.6 20 L 100.4 34 L 99.6 34 Z', fill: '#ffd2a0' }, needle);
+      svgEl('circle', { cx: 100, cy: 100, r: 9.5, fill: '#1a1a1e', stroke: '#33333a', 'stroke-width': 1.5 }, svg);
+      svgEl('circle', { cx: 100, cy: 100, r: 3.2, fill: '#2c2c33' }, svg);
+
+      setNeedle(key, cfg.min);
+    }
+
+    function setNeedle(key, value) {
+      const needle = document.getElementById('g' + key + 'Needle');
+      if (needle) needle.style.transform = `rotate(${valueToAngle(GAUGES[key], value).toFixed(2)}deg)`;
+    }
+
+    // Barrido de agujas al conectar (como el tablero al dar marcha)
+    let gaugeSweeping = false;
+    function sweepGauges() {
+      if (gaugeSweeping) return;
+      gaugeSweeping = true;
+      const needles = Object.keys(GAUGES).map(k => document.getElementById('g' + k + 'Needle')).filter(Boolean);
+      needles.forEach(n => n.classList.add('sweep'));
+      Object.keys(GAUGES).forEach(k => setNeedle(k, GAUGES[k].max));
+      setTimeout(() => Object.keys(GAUGES).forEach(k => setNeedle(k, GAUGES[k].min)), 480);
+      setTimeout(() => {
+        needles.forEach(n => n.classList.remove('sweep'));
+        gaugeSweeping = false;
+      }, 960);
+    }
+
+    Object.keys(GAUGES).forEach(buildGauge);
+
     function updateUiDashboard(d) {
       try {
-      // 1. Reloj Izquierdo: Tacómetro RPM (0 a 8000 RPM)
-      const maxRpm = 8000;
-      const rpmPct = Math.min(Math.max(d.rpm / maxRpm, 0), 1);
-      const rpmArcLen = 326.7;
-      const rpmOffset = rpmArcLen - (rpmArcLen * rpmPct);
-      const rpmArc = document.getElementById('gaugeProgress');
-      if (rpmArc) rpmArc.style.strokeDashoffset = rpmOffset;
-      const valRpm = document.getElementById('valRpm');
-      if (valRpm) valRpm.textContent = d.rpm;
-
-      // 2. Reloj Central: Velocímetro Grande (0 a 220 KM/H)
-      const maxVss = 220;
-      const vssPct = Math.min(Math.max(d.vss / maxVss, 0), 1);
-      const vssArcLen = 417.5;
-      const vssOffset = vssArcLen - (vssArcLen * vssPct);
-      const vssArc = document.getElementById('gaugeVssProgress');
-      if (vssArc) vssArc.style.strokeDashoffset = vssOffset;
-      const valVss = document.getElementById('valVss');
-      if (valVss) valVss.textContent = d.vss;
-
-      // 3. Reloj Derecho: Temperatura Refrigerante ECT (0 a 130 °C)
-      const maxEct = 130;
-      const ectPct = Math.min(Math.max(d.ect / maxEct, 0), 1);
-      const ectArcLen = 326.7;
-      const ectOffset = ectArcLen - (ectArcLen * ectPct);
-      const ectArc = document.getElementById('gaugeEctProgress');
-      if (ectArc) ectArc.style.strokeDashoffset = ectOffset;
-      const valEctGauge = document.getElementById('valEctGauge');
-      if (valEctGauge) valEctGauge.textContent = d.ect;
+      // 1-3. Agujas de los relojes (se congelan durante el barrido de arranque)
+      if (!gaugeSweeping) {
+        setNeedle('rpm', d.rpm);
+        setNeedle('vss', d.vss);
+        setNeedle('ect', d.ect);
+      }
+      const setTxt0 = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      setTxt0('valRpm', d.rpm);
+      setTxt0('valVss', d.vss);
+      setTxt0('valEctGauge', d.ect);
 
       // Semáforo de rangos (solo con enlace real a la ECU)
       if (d.connected) {
@@ -2398,7 +2199,7 @@
       const w = canvas.width;
       const h = canvas.height;
 
-      ctx.fillStyle = '#101520';
+      ctx.fillStyle = '#0d0d0f';
       ctx.fillRect(0, 0, w, h);
 
       // Grid lines
@@ -2415,8 +2216,8 @@
 
       const step = w / 100;
 
-      // Draw RPM Line (Red)
-      ctx.strokeStyle = '#ff2d55';
+      // Línea RPM (ámbar)
+      ctx.strokeStyle = '#ff8a1e';
       ctx.lineWidth = 2.5;
       ctx.beginPath();
       chartHistory.forEach((pt, i) => {
@@ -2427,8 +2228,8 @@
       });
       ctx.stroke();
 
-      // Draw TPS Line (Green)
-      ctx.strokeStyle = '#00e676';
+      // Línea TPS (blanca)
+      ctx.strokeStyle = 'rgba(242, 242, 240, 0.85)';
       ctx.lineWidth = 1.8;
       ctx.beginPath();
       chartHistory.forEach((pt, i) => {
