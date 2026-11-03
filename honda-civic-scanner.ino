@@ -13,6 +13,11 @@
  */
 
 #include "honda_kline.h"
+#include "telemetry_frame.h"
+#include "device_info.h"
+#include "power_policy.h"
+#include <esp_mac.h>
+#include <esp_sleep.h>
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
@@ -40,7 +45,8 @@ volatile PendingCmd pendingCmd = CMD_NONE;
 // ==============================================================================
 // CONFIGURACIÓN BLUETOOTH LOW ENERGY (NORDIC UART SERVICE)
 // ==============================================================================
-#define BLE_DEVICE_NAME "Civic99-OBD"
+#define BLE_DEVICE_NAME "Civic99-OBD"   // prefijo; el nombre real lleva "-XXXX" de la MAC
+static char bleName[24] = BLE_DEVICE_NAME;
 #define SERVICE_UUID           "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
 #define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 #define CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
@@ -52,6 +58,10 @@ BLECharacteristic *pRxCharacteristic = nullptr;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 unsigned long lastBleNotify = 0;
+
+// Ahorro de energía (ver power_policy.h)
+uint32_t lastActivityMs = 0;
+uint32_t awakeWindowMs = AWAKE_WINDOW_COLD_BOOT_MS;
 
 // Enviar cadena de texto / JSON por la característica TX
 void bleSendText(const String &str) {
@@ -193,6 +203,12 @@ class RxCallbacks : public BLECharacteristicCallbacks {
         bleSendText("{\"type\":\"ecuType\",\"val\":" + String(t) + "}");
       }
     }
+    // Identificación del equipo: versión de firmware/hardware y nombre BLE
+    else if (rxValue == "INFO") {
+      char buf[160];
+      formatInfoJson(FW_VERSION, HW_REV, bleName, honda.ecuType, buf, sizeof(buf));
+      bleSendText(buf);
+    }
     // 2. Alternar modo Demo
     else if (rxValue.startsWith("DEMO:")) {
       bool en = (rxValue.substring(5).toInt() == 1);
@@ -234,6 +250,11 @@ void setup() {
   delay(500);
   Serial.println("\n--- Honda Civic '99 Scanner BLE Inicializando ---");
 
+  // Si venimos de deep sleep (llave en OFF), solo una ventana corta para buscar la ECU
+  if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER) {
+    awakeWindowMs = AWAKE_WINDOW_AFTER_WAKE_MS;
+  }
+
   // Configurar LED de estado
   pinMode(LED_STATUS_PIN, OUTPUT);
   digitalWrite(LED_STATUS_PIN, LOW);
@@ -243,8 +264,11 @@ void setup() {
   honda.begin(KLINE_RX_PIN, KLINE_TX_PIN);
 
   // Configurar e inicializar BLE
-  Serial.printf("[BLE] Inicializando dispositivo BLE '%s'...\n", BLE_DEVICE_NAME);
-  BLEDevice::init(BLE_DEVICE_NAME);
+  uint8_t mac[6];
+  esp_read_mac(mac, ESP_MAC_BT);
+  formatDeviceName(BLE_DEVICE_NAME, mac, bleName, sizeof(bleName));
+  Serial.printf("[BLE] Inicializando dispositivo BLE '%s' FW %s HW %s...\n", bleName, FW_VERSION, HW_REV);
+  BLEDevice::init(bleName);
 
   // Crear Servidor BLE
   pServer = BLEDevice::createServer();
@@ -281,96 +305,11 @@ void setup() {
   honda.sendInit();
 }
 
-// Empaquetar y notificar la trama binaria de telemetría (29 bytes)
+// Empaquetar y notificar la trama binaria de telemetría (formato en telemetry_frame.h)
 void sendTelemetryFrame() {
   if (!deviceConnected || !pTxCharacteristic) return;
-
-  const TelemetryData &d = honda.data;
-  uint8_t frame[29];
-
-  frame[0] = 0xA5; // Byte de sincronización 1
-  frame[1] = 0x5A; // Byte de sincronización 2
-  frame[2] = 29;   // Longitud de la trama
-
-  // RPM (uint16_t, Big-Endian)
-  frame[3] = (uint8_t)(d.rpm >> 8);
-  frame[4] = (uint8_t)(d.rpm & 0xFF);
-
-  // VSS (Velocidad km/h)
-  frame[5] = (uint8_t)d.vss;
-
-  // Estado discreto / Bitfield (1 byte)
-  // Bit 0: VTEC | Bit 1: A/C Clutch | Bit 2: Freno | Bit 3: P/N | Bit 4: Conectado | Bit 5: Demo | Bit 6: MIL Check Engine
-  frame[6] = (d.vtec ? 0x01 : 0) |
-             (d.ac ? 0x02 : 0) |
-             (d.brake ? 0x04 : 0) |
-             (d.parkNeutral ? 0x08 : 0) |
-             (d.connected ? 0x10 : 0) |
-             (d.demo ? 0x20 : 0) |
-             (d.mil ? 0x40 : 0);
-
-  // Velocidad de transmisión automática (0=N, 1=1st, 2=2nd, 3=D3, 4=D4)
-  frame[7] = (uint8_t)d.gear;
-
-  // Temperaturas (offset +40 para asegurar valores positivos 0-255)
-  frame[8] = (uint8_t)(d.ect + 40);
-  frame[9] = (uint8_t)(d.iat + 40);
-
-  // Presiones
-  frame[10] = (uint8_t)d.map;
-  frame[11] = (uint8_t)d.baro;
-
-  // TPS (% de apertura)
-  frame[12] = (uint8_t)d.tps;
-
-  // Sensor de Oxígeno O2 Primario (Voltios * 100, ej: 0.85V -> 85)
-  frame[13] = (uint8_t)constrain((int)(d.o2 * 100.0f), 0, 255);
-
-  // Batería (Voltios * 10, ej: 13.8V -> 138)
-  frame[14] = (uint8_t)constrain((int)(d.batt * 10.0f), 0, 255);
-
-  // Carga de alternador Alt FR (%)
-  frame[15] = (uint8_t)d.altFr;
-
-  // Detector de carga eléctrica ELD (Amperes * 2, rango 0 a 127.5 A con resolución de 0.5 A)
-  frame[16] = (uint8_t)constrain((int)roundf(d.eld * 2.0f), 0, 255);
-
-  // Avance de encendido IGN (Grados * 2, cast a uint8_t para transporte)
-  frame[17] = (uint8_t)(int8_t)constrain((int)(d.ign * 2.0f), -128, 127);
-
-  // Tiempo de inyección INJ (Milisegundos * 100, uint16_t Big-Endian, ej: 2.50ms -> 250)
-  uint16_t injScaled = (uint16_t)constrain((int)(d.inj * 100.0f), 0, 65535);
-  frame[18] = (uint8_t)(injScaled >> 8);
-  frame[19] = (uint8_t)(injScaled & 0xFF);
-
-  // Trims de combustible (Short / Long Term Fuel Trim: -100% a +100%)
-  frame[20] = (uint8_t)(int8_t)constrain(d.sft, -128, 127);
-  frame[21] = (uint8_t)(int8_t)constrain(d.lft, -128, 127);
-
-  // Válvula de ralentí IACV (%)
-  frame[22] = (uint8_t)d.iacv;
-
-  // Sensor de cascabeleo / Detonación Knock
-  frame[23] = (uint8_t)d.knock;
-
-  // Flujo de aire MAF (g/s * 10, uint16_t Big-Endian)
-  uint16_t mafScaled = (uint16_t)constrain((int)(d.maf * 10.0f), 0, 65535);
-  frame[24] = (uint8_t)(mafScaled >> 8);
-  frame[25] = (uint8_t)(mafScaled & 0xFF);
-
-  // Cantidad de códigos de falla DTC activos
-  frame[26] = (uint8_t)d.dtcCount;
-
-  // Sensor de Oxígeno O2 Secundario (Voltios * 100, ej: 0.65V -> 65)
-  frame[27] = (uint8_t)constrain((int)(d.o2Sec * 100.0f), 0, 255);
-
-  // Checksum XOR de bytes [2..27]
-  uint8_t cs = 0;
-  for (int i = 2; i < 28; i++) {
-    cs ^= frame[i];
-  }
-  frame[28] = cs;
-
+  uint8_t frame[TELEMETRY_FRAME_LEN];
+  packTelemetryFrame(honda.data, frame);
   pTxCharacteristic->setValue(frame, sizeof(frame));
   pTxCharacteristic->notify();
 }
@@ -412,6 +351,20 @@ void loop() {
   if (now - lastBlink > blinkInterval) {
     lastBlink = now;
     digitalWrite(LED_STATUS_PIN, !digitalRead(LED_STATUS_PIN));
+  }
+
+  // Ahorro de energía: sin celular ni ECU (llave en OFF) -> deep sleep por timer
+  bool ecuActive = honda.data.connected || honda.data.demo;
+  if (deviceConnected || ecuActive) {
+    lastActivityMs = now;
+    awakeWindowMs = AWAKE_WINDOW_COLD_BOOT_MS; // tras actividad real, volver a la ventana larga
+  }
+  if (shouldDeepSleep(now, lastActivityMs, deviceConnected, ecuActive, awakeWindowMs)) {
+    Serial.println("[PWR] Sin ECU ni celular: deep sleep");
+    Serial.flush();
+    digitalWrite(LED_STATUS_PIN, LOW);
+    esp_sleep_enable_timer_wakeup((uint64_t)SLEEP_SECONDS * 1000000ULL);
+    esp_deep_sleep_start();
   }
 
   // Ceder 2ms al planificador FreeRTOS
