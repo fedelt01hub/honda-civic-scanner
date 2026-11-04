@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">K-Lino</string>
+    <string name="title_activity_main">K-Lino</string>
+    <string name="package_name">com.klino.escaner</string>
+    <string name="custom_url_scheme">com.klino.escaner</string>
+</resources>

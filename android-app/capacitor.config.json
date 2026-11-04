@@ -1,0 +1,27 @@
+{
+  "appId": "com.klino.escaner",
+  "appName": "K-Lino",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#050506"
+  },
+  "plugins": {
+    "SystemBars": {
+      "style": "DARK",
+      "initialViewportFitValueHint": "cover"
+    },
+    "CapacitorUpdater": {
+      "autoUpdate": false,
+      "statsUrl": "",
+      "appReadyTimeout": 10000
+    },
+    "BluetoothLe": {
+      "displayStrings": {
+        "scanning": "Buscando K-Lino...",
+        "cancel": "Cancelar",
+        "availableDevices": "Equipos K-Lino",
+        "noDeviceFound": "No se encontró ningún K-Lino. Revisa que esté conectado y la llave en ON."
+      }
+    }
+  }
+}

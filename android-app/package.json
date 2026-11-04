@@ -1,0 +1,32 @@
+{
+  "name": "klino-android",
+  "version": "1.4.0",
+  "scripts": {
+    "test": "node --test",
+    "build:web": "node scripts/build-web.mjs",
+    "sync": "npm run build:web && npx cap sync android",
+    "apk:debug": "npm run sync && cd android && ./gradlew assembleDebug",
+    "bundle": "npm run build:web && node scripts/build-bundle.mjs"
+  },
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@capacitor-community/bluetooth-le": "^8.3.0",
+    "@capacitor-community/keep-awake": "^8.0.1",
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/share": "^8.0.3",
+    "@capgo/capacitor-updater": "^8.54.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.0",
+    "esbuild": "^0.28.2",
+    "fflate": "^0.8.3"
+  },
+  "klino": {
+    "minNative": "1.4.0"
+  }
+}

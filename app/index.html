@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>K-Lino v1.3 - Escáner & Datalogger</title>
+  <title>K-Lino v1.4 - Escáner & Datalogger</title>
   
   <!-- Cache Control (Evita que el navegador retenga versiones viejas al recargar) -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -22,7 +22,7 @@
 
   <style>
     /* =========================================================================
-     * K-LINO v1.3 — Estilo "tablero OEM": negro, blanco, iluminación ámbar
+     * K-LINO v1.4 — Estilo "tablero OEM": negro, blanco, iluminación ámbar
      * ========================================================================= */
     @font-face {
       font-family: 'Barlow Condensed';
@@ -67,7 +67,9 @@
       /* Tipografía */
       --num: 'Barlow Condensed', 'Arial Narrow', 'Roboto Condensed', sans-serif;
       --ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      --safe-bottom: env(safe-area-inset-bottom, 12px);
+      /* Zonas seguras: env() en navegador; --safe-area-inset-* los inyecta el APK (Capacitor SystemBars) */
+      --safe-top: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
+      --safe-bottom: max(env(safe-area-inset-bottom, 12px), var(--safe-area-inset-bottom, 0px));
     }
 
     * {
@@ -99,14 +101,13 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      padding: 10px 16px;
+      padding: calc(10px + var(--safe-top)) 16px 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--line);
     }
     .brand { display: flex; align-items: center; gap: 10px; }
-    .brand-logo { width: 30px; height: 30px; border-radius: 8px; opacity: 0.95; }
     .brand-title {
       font-family: var(--num);
       font-size: 1.35rem;
@@ -118,14 +119,15 @@
       line-height: 1;
     }
     .brand-badge {
-      font-family: var(--ui);
-      font-size: 0.6rem;
-      font-weight: 800;
-      letter-spacing: 1.5px;
+      font-family: var(--num);
+      font-size: 1.05rem;
+      letter-spacing: 2px;
       color: var(--amber);
-      border: 1px solid rgba(255, 138, 30, 0.45);
-      padding: 2px 5px;
-      border-radius: 4px;
+      border: 1px solid rgba(255, 138, 30, 0.55);
+      background: rgba(255, 138, 30, 0.08);
+      padding: 4px 9px 3px;
+      border-radius: 6px;
+      text-shadow: 0 0 8px rgba(255, 138, 30, 0.45);
     }
     .brand-version {
       font-family: var(--ui);
@@ -171,7 +173,7 @@
     /* ------------------------------------------------------------------ Toast */
     .toast-notify {
       position: fixed;
-      top: 18px;
+      top: calc(18px + var(--safe-top));
       left: 50%;
       transform: translateX(-50%) translateY(-100px);
       background: #141417;
@@ -881,6 +883,53 @@
       from { opacity: 1; visibility: visible; }
       to   { opacity: 0; visibility: hidden; }
     }
+
+    /* ------------------------------------------ Selector de equipos K-Lino (APK) */
+    .scan-radar { position: relative; width: 74px; height: 74px; margin: 6px auto 12px; }
+    .scan-radar::before, .scan-radar::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid var(--amber);
+      opacity: 0;
+      animation: scanPulse 1.6s ease-out infinite;
+    }
+    .scan-radar::after { animation-delay: 0.8s; }
+    .scan-radar span {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 14px;
+      height: 14px;
+      margin: -7px 0 0 -7px;
+      border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 12px rgba(255, 138, 30, 0.9);
+    }
+    @keyframes scanPulse { 0% { transform: scale(0.2); opacity: 0.9; } 100% { transform: scale(1); opacity: 0; } }
+    .scan-list { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 14px; max-height: 45vh; overflow-y: auto; }
+    .scan-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 138, 30, 0.4);
+      background: rgba(255, 138, 30, 0.07);
+      color: var(--text);
+      font-family: var(--num);
+      font-size: 1.2rem;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+    }
+    .scan-item:active { transform: scale(0.98); background: rgba(255, 138, 30, 0.15); }
+    .scan-bars { display: flex; align-items: flex-end; gap: 2px; height: 16px; }
+    .scan-bars i { display: block; width: 4px; background: #2e2e35; border-radius: 1px; }
+    .scan-bars i.on { background: var(--green); }
+    .scan-hint { font-size: 0.8rem; color: var(--text-dim); text-align: center; line-height: 1.45; }
   </style>
 </head>
 <body>
@@ -960,17 +1009,16 @@
   </div>
   </div>
 
-  <!-- Header: marca K-Lino y Conectar Bluetooth -->
+  <!-- Header: etiqueta K-LINE, versión y botón Conectar -->
   <header>
     <div class="brand">
-      <img src="icon-192.png" class="brand-logo" alt="K-Lino">
       <div>
-        <div class="brand-title">K-LINO <span class="brand-badge">K-LINE</span> <span class="brand-version" id="brandVersionBadge">v1.3</span></div>
+        <div class="brand-title"><span class="brand-badge">K-LINE</span> <span class="brand-version" id="brandVersionBadge">v1.4</span></div>
       </div>
     </div>
     <button id="btnConnect" class="btn-connect" onclick="toggleBleConnection()">
       <span id="bleIcon" class="status-dot-circle"></span>
-      <span id="bleStatusText">Conectar Bluetooth</span>
+      <span id="bleStatusText">Conectar</span>
     </button>
   </header>
 
@@ -1275,6 +1323,7 @@
       </div>
       <div id="advBody" style="display:none; margin-top:12px;">
         <div id="deviceInfoText" style="font-size:0.8rem; color:var(--text-dim); margin-bottom:8px;">Equipo: sin conectar</div>
+        <button id="btnForgetDevice" class="btn-action btn-ghost" style="display:none; margin-bottom:8px;" onclick="forgetBleDevice()">Olvidar equipo K-Lino</button>
         <div class="sub-block-head">
           <span class="sub-heading">Enlace K-Line</span>
         </div>
@@ -1306,7 +1355,7 @@
         <div class="sub-block">
           <div class="sub-block-head">
             <span class="sub-heading">Actualizaciones</span>
-            <span id="pwaVersionTag" class="badge-version">v1.3</span>
+            <span id="pwaVersionTag" class="badge-version">v1.4</span>
           </div>
           <div id="updateStatusText" style="font-size:0.78rem; color:var(--text-dim); margin-bottom:12px; line-height:1.4;">
             Esta app funciona 100% offline. Toca el botón para verificar con GitHub si hay una nueva versión disponible.
@@ -1347,6 +1396,19 @@
   </nav>
 
   <!-- Clear DTC Confirmation Modal -->
+  <!-- Selector de equipos K-Lino (APK): reemplaza el diálogo genérico de Android -->
+  <div id="bleScanModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-title" style="text-align:center;">Buscar K-Lino</div>
+      <div class="scan-radar"><span></span></div>
+      <div id="bleScanHint" class="scan-hint">Conecta el K-Lino al auto y pon la llave en ON.</div>
+      <div id="bleScanList" class="scan-list"></div>
+      <div class="modal-actions">
+        <button id="bleScanCancel" class="modal-btn" style="background: #24242a; color: var(--text);">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <div id="clearModal" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-title">¿Borrar Códigos?</div>
@@ -1371,16 +1433,28 @@
 
   <script>
     // =========================================================================
+    // PLATAFORMA: web (PWA) o app Android (Capacitor). En el APK se carga
+    // native-bridge.js (android-app/src/native-entry.mjs) -> window.KLinoNative
+    // =========================================================================
+    const IS_NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+    const nativeReady = IS_NATIVE
+      ? new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'native-bridge.js';
+          s.onload = () => resolve(window.KLinoNative);
+          s.onerror = () => reject(new Error('No se pudo cargar native-bridge.js'));
+          document.head.appendChild(s);
+        })
+      : Promise.resolve(null);
+    // =========================================================================
     // SERVICIO NORDIC UART (NUS) UUIDs
     // =========================================================================
     const NUS_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
     const NUS_RX_UUID      = '6e400002-b5a3-f393-e0a9-e50e24dcca9e'; // Phone -> ESP32
     const NUS_TX_UUID      = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'; // ESP32 -> Phone
 
-    let bleDevice = null;
-    let bleServer = null;
-    let rxChar = null;
-    let txChar = null;
+    const BLE_NAME_PREFIX = 'K-Lino';
+    let bleTransport = null;   // WebBleTransport o el nativo (KLinoNative.createBle)
     let isConnected = false;
 
     // Current State
@@ -1414,7 +1488,7 @@
     // =========================================================================
     // SISTEMA DE ACTUALIZACIÓN MANUAL Y GESTIÓN DE CACHÉ PWA
     // =========================================================================
-    const APP_CURRENT_VERSION = 'v1.3';
+    const APP_CURRENT_VERSION = 'v1.4';
     let toastTimeout = null;
 
     function showToast(msg, duration = 3200, type = 'info') {
@@ -1457,6 +1531,36 @@
         showToast('Sin conexión a Internet. Conéctate a WiFi o datos.', 4000);
         if (statusEl) statusEl.textContent = 'Sin conexión a Internet. Conéctate a WiFi o datos móviles.';
         if (btn) btn.disabled = false;
+        return;
+      }
+
+      if (IS_NATIVE) {
+        try {
+          const native = await nativeReady;
+          // 1) App (pantallas, códigos, animaciones): se actualiza sin reinstalar
+          const w = await native.updateWeb(APP_CURRENT_VERSION, { applyNow: true });
+          if (w.action === 'downloaded') {
+            showToast(`Instalando versión v${w.latest}...`, 3000, 'ok');
+            return; // la app se recarga sola con la versión nueva
+          }
+          // 2) APK: solo cuando cambia la parte nativa (permisos, Bluetooth)
+          const u = await native.checkApkUpdate();
+          if (u.newer) {
+            if (statusEl) statusEl.textContent = `Hay una versión nueva (${u.latest}). Tienes la ${u.current}.`;
+            showInfoModal('Actualización disponible',
+              `Versión <b>${u.latest}</b> (tienes ${u.current}).<br><br>Se descargará el APK: ábrelo y toca <b>Actualizar</b>. Tus ajustes se conservan.`);
+            window.open(u.url, '_blank');
+          } else {
+            showToast(`Tienes la versión más reciente (${u.current}).`, 3500);
+            if (statusEl) statusEl.textContent = `Estás al día con la última versión (${u.current}).`;
+          }
+        } catch (err) {
+          console.error('Error buscando actualizaciones:', err);
+          showToast('No se pudo comprobar la actualización. Intenta de nuevo.', 3500);
+          if (statusEl) statusEl.textContent = 'Error al consultar GitHub: ' + err.message;
+        } finally {
+          if (btn) btn.disabled = false;
+        }
         return;
       }
 
@@ -1526,7 +1630,7 @@
     // =========================================================================
     // SERVICE WORKER & PWA INSTALL
     // =========================================================================
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && !IS_NATIVE) {
       navigator.serviceWorker.register('./sw.js').then((reg) => {
         reg.update(); // Verifica activamente si hay una nueva versión en GitHub al cargar
         reg.addEventListener('updatefound', () => {
@@ -1559,6 +1663,7 @@
 
     let deferredPrompt = null;
     window.addEventListener('beforeinstallprompt', (e) => {
+      if (IS_NATIVE) return; // en el APK ya está instalada
       e.preventDefault();
       deferredPrompt = e;
       const banner = document.getElementById('installBanner');
@@ -1584,6 +1689,7 @@
     let wakeLockObj = null;
     async function requestWakeLock() {
       try {
+        if (IS_NATIVE) { await (await nativeReady).keepAwake(true); return; }
         if ('wakeLock' in navigator) {
           wakeLockObj = await navigator.wakeLock.request('screen');
           console.log('[WakeLock] Pantalla bloqueada contra suspensión.');
@@ -1594,6 +1700,7 @@
     }
 
     function releaseWakeLock() {
+      if (IS_NATIVE) { nativeReady.then(n => n.keepAwake(false)).catch(() => {}); return; }
       if (wakeLockObj) {
         wakeLockObj.release().catch(() => {});
         wakeLockObj = null;
@@ -1615,59 +1722,137 @@
     });
 
     // =========================================================================
-    // BLUETOOTH LOW ENERGY (WEB BLUETOOTH API)
+    // BLUETOOTH LOW ENERGY: Web Bluetooth (navegador) o plugin nativo (APK)
     // =========================================================================
+    // Interfaz común: connect(onNotify(DataView), onDisconnect) -> nombre; write(Uint8Array); disconnect(); reset()
+    const WebBleTransport = {
+      device: null,
+      rx: null,
+      async connect(onNotify, onDisconnect) {
+        if (!this.device || !this.device.gatt) {
+          this.device = await navigator.bluetooth.requestDevice({
+            filters: [{ namePrefix: BLE_NAME_PREFIX }, { namePrefix: 'Civic99-OBD' }], // 'K-Lino-XXXX' y equipos anteriores
+            optionalServices: [NUS_SERVICE_UUID]
+          });
+          this.device.addEventListener('gattserverdisconnected', () => onDisconnect());
+        }
+        const server = await this.device.gatt.connect();
+        const service = await server.getPrimaryService(NUS_SERVICE_UUID);
+        const tx = await service.getCharacteristic(NUS_TX_UUID);
+        this.rx = await service.getCharacteristic(NUS_RX_UUID);
+        await tx.startNotifications();
+        tx.addEventListener('characteristicvaluechanged', (e) => onNotify(e.target.value));
+        return this.device.name || 'escáner';
+      },
+      async write(bytes) { await this.rx.writeValue(bytes); },
+      disconnect() { if (this.device && this.device.gatt.connected) this.device.gatt.disconnect(); },
+      reset() { this.device = null; this.rx = null; }
+    };
+
+    async function getBleTransport() {
+      if (bleTransport) return bleTransport;
+      if (IS_NATIVE) {
+        const native = await nativeReady;
+        bleTransport = native.createBle({
+          service: NUS_SERVICE_UUID, tx: NUS_TX_UUID, rx: NUS_RX_UUID, namePrefix: BLE_NAME_PREFIX,
+          pick: () => pickBleDevice(native)
+        });
+      } else {
+        bleTransport = WebBleTransport;
+      }
+      return bleTransport;
+    }
+
+    // Selector propio de equipos (APK): escanea con el plugin nativo y muestra la lista
+    // con la estética de la app. Resuelve {deviceId, name}; rechaza con 'cancelado'.
+    function pickBleDevice(native) {
+      return new Promise((resolve, reject) => {
+        const modal = document.getElementById('bleScanModal');
+        const list = document.getElementById('bleScanList');
+        const hint = document.getElementById('bleScanHint');
+        const found = new Map();
+        let stop = null;
+        let closed = false;
+        let slowTimer = null;
+        const close = (ok, value) => {
+          if (closed) return;
+          closed = true;
+          clearTimeout(slowTimer);
+          if (stop) stop();
+          modal.classList.remove('active');
+          if (ok) resolve(value); else reject(value);
+        };
+        const bars = (rssi) => {
+          const n = rssi > -60 ? 4 : rssi > -70 ? 3 : rssi > -80 ? 2 : 1;
+          return '<span class="scan-bars">' +
+            [1, 2, 3, 4].map(i => `<i class="${i <= n ? 'on' : ''}" style="height:${i * 4}px"></i>`).join('') +
+            '</span>';
+        };
+        const render = () => {
+          list.innerHTML = '';
+          [...found.values()].sort((a, b) => b.rssi - a.rssi).forEach(d => {
+            const btn = document.createElement('button');
+            btn.className = 'scan-item';
+            btn.innerHTML = '<span></span>' + bars(d.rssi);
+            btn.firstChild.textContent = d.name;
+            btn.onclick = () => close(true, d);
+            list.appendChild(btn);
+          });
+          hint.textContent = 'Toca tu equipo. Las 4 letras finales vienen en la etiqueta del K-Lino.';
+        };
+        list.innerHTML = '';
+        hint.textContent = 'Conecta el K-Lino al auto y pon la llave en ON.';
+        document.getElementById('bleScanCancel').onclick = () => close(false, new Error('cancelado'));
+        slowTimer = setTimeout(() => {
+          if (!found.size) hint.textContent = 'No aparece ningún K-Lino. Revisa que esté bien conectado y la llave en ON. Si el auto estuvo apagado, puede tardar hasta 20 s.';
+        }, 8000);
+        modal.classList.add('active');
+        native.startScan(BLE_NAME_PREFIX, (d) => { found.set(d.deviceId, d); render(); })
+          .then(stopFn => { if (closed) stopFn(); else stop = stopFn; })
+          .catch(e => close(false, e));
+      });
+    }
+
     async function toggleBleConnection() {
       if (isConnected) {
         disconnectBle();
         return;
       }
+      if (!IS_NATIVE && !navigator.bluetooth) {
+        showInfoModal('Bluetooth no disponible', 'Tu navegador no soporta Web Bluetooth. Usa Google Chrome o Brave en Android, o la app Bluefy en iPhone.');
+        return;
+      }
       try {
-        if (!navigator.bluetooth) {
-          showInfoModal('Bluetooth no disponible', 'Tu navegador no soporta Web Bluetooth. Usa Google Chrome o Brave en Android, o la app Bluefy en iPhone.');
-          return;
-        }
-
         document.getElementById('bleStatusText').textContent = 'Conectando...';
-
-        // Si ya teníamos el dispositivo emparejado en esta sesión, reconectar directo
-        if (!bleDevice || !bleDevice.gatt) {
-          bleDevice = await navigator.bluetooth.requestDevice({
-            filters: [{ namePrefix: 'K-Lino' }, { namePrefix: 'Civic99-OBD' }], // 'K-Lino-XXXX' y equipos anteriores
-            optionalServices: [NUS_SERVICE_UUID]
-          });
-          bleDevice.addEventListener('gattserverdisconnected', onBleDisconnected);
-        }
-
-        bleServer = await bleDevice.gatt.connect();
-
-        const service = await bleServer.getPrimaryService(NUS_SERVICE_UUID);
-        txChar = await service.getCharacteristic(NUS_TX_UUID);
-        rxChar = await service.getCharacteristic(NUS_RX_UUID);
-
-        await txChar.startNotifications();
-        txChar.addEventListener('characteristicvaluechanged', handleBleNotification);
-
+        const transport = await getBleTransport();
+        const name = await transport.connect(
+          (value) => handleBleNotification({ target: { value } }),
+          onBleDisconnected
+        );
         isConnected = true;
         updateBleUi(true);
-        setDeviceInfoText(`Equipo: ${bleDevice.name || 'escáner'}`);
+        setDeviceInfoText(`Equipo: ${name}`);
         sendBleCmd('INFO'); // firmware >= 1.0.0 responde {"type":"info",...}
         await requestWakeLock();
         console.log('[BLE] Conectado exitosamente.');
       } catch (err) {
         console.error('[BLE] Error de conexión:', err);
-        // Si falló la reconexión rápida, reiniciar bleDevice para volver a mostrar el selector
-        bleDevice = null;
+        if (bleTransport) bleTransport.reset();
         updateBleUi(false);
+        if (IS_NATIVE && err && err.message !== 'cancelado') showToast('No se pudo conectar al K-Lino. Revisa que esté conectado al auto con la llave en ON.', 4500, 'warn');
       }
     }
 
     function disconnectBle() {
       releaseWakeLock();
-      if (bleDevice && bleDevice.gatt.connected) {
-        bleDevice.gatt.disconnect();
-      }
+      if (bleTransport) bleTransport.disconnect();
       onBleDisconnected();
+    }
+
+    function forgetBleDevice() {
+      if (bleTransport && bleTransport.forget) bleTransport.forget();
+      else localStorage.removeItem('klinoDeviceId');
+      showToast('Equipo olvidado. La próxima conexión mostrará la lista de K-Lino.', 3500, 'ok');
     }
 
     function setDeviceInfoText(text) {
@@ -1698,7 +1883,7 @@
         document.getElementById('recHint').hidden = true;
       } else {
         btn.classList.remove('connected');
-        text.textContent = 'Conectar BLE';
+        text.textContent = 'Conectar';
         icon.className = 'status-dot-circle';
         document.getElementById('pillLink').textContent = 'ECU OFF';
         document.getElementById('pillLink').style.color = '';
@@ -1712,18 +1897,18 @@
     const bleCmdQueue = [];
 
     async function sendBleCmd(cmd) {
-      if (!rxChar || !isConnected) return;
+      if (!bleTransport || !isConnected) return;
       // Evitar acumular múltiples GET_DIAG repetidos en la cola
       if (cmd === 'GET_DIAG' && bleCmdQueue.includes('GET_DIAG')) return;
       bleCmdQueue.push(cmd);
       if (isBleWriting) return;
 
       isBleWriting = true;
-      while (bleCmdQueue.length > 0 && rxChar && isConnected) {
+      while (bleCmdQueue.length > 0 && bleTransport && isConnected) {
         const nextCmd = bleCmdQueue.shift();
         try {
           const encoder = new TextEncoder();
-          await rxChar.writeValue(encoder.encode(nextCmd));
+          await bleTransport.write(encoder.encode(nextCmd));
         } catch (err) {
           console.error('Error enviando comando BLE:', nextCmd, err);
         }
@@ -2281,13 +2466,22 @@
       const header = "Timestamp_ms,RPM,VSS_kmh,TPS_pct,MAP_kPa,Vacuum_inHg,ECT_C,IAT_C,O2_V,O2_Sec_V,Batt_V,IGN_deg,INJ_ms,SFT_pct,LFT_pct,VTEC,AC_Clutch,Brake,Gear,ELD_A,IACV_pct,MAF_gs,Baro_kPa,Knock\n";
       const csvContent = header + recordedRows.map(r => r.join(',')).join('\n');
 
+      const now = new Date();
+      const dateStr = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const fileName = `K-Lino_Log_${dateStr}.csv`;
+
+      if (IS_NATIVE) {
+        nativeReady
+          .then(n => n.shareCsv(fileName, csvContent))
+          .catch(e => showToast('No se pudo exportar el CSV: ' + e.message, 3500, 'warn'));
+        return;
+      }
+
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      const now = new Date();
-      const dateStr = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
       link.setAttribute('href', url);
-      link.setAttribute('download', `K-Lino_Log_${dateStr}.csv`);
+      link.setAttribute('download', fileName);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -2763,6 +2957,16 @@
       initDtcLib();
       const chk = document.getElementById('chkSplashSound');
       if (chk) chk.checked = localStorage.getItem('klinoSplashSound') !== '0';
+      if (IS_NATIVE) document.getElementById('btnForgetDevice').style.display = '';
+      // APK: buscar en segundo plano una versión nueva de la app; se aplica al volver a abrirla
+      if (IS_NATIVE && navigator.onLine) {
+        setTimeout(() => {
+          nativeReady
+            .then(n => n.updateWeb(APP_CURRENT_VERSION))
+            .then(r => { if (r.action === 'downloaded') showToast(`Versión v${r.latest} lista: se aplicará la próxima vez que abras la app.`, 4500, 'ok'); })
+            .catch(e => console.warn('[Update] ', e));
+        }, 4000);
+      }
     });
 
     // Splash: tacómetro que revoluciona sincronizado con la grabación vtec-rev.mp3

@@ -23,11 +23,17 @@ Si el auto va a estar parado **más de 2 semanas**, desconéctalo para cuidar la
 
 ## 2. Instala la app
 
-La app se abre desde el navegador y se instala como un ícono más. No ocupa tienda de apps.
-
 **Dirección de la app:** `https://fedelt01hub.github.io/civic-obd/` (o escanea el QR de esta tarjeta)
 
-### Android
+### Android (recomendado: app K-Lino)
+1. Descarga el archivo **K-Lino-x.x.x.apk** desde `https://github.com/fedelt01hub/honda-civic-scanner/releases/latest`.
+2. Ábrelo. La primera vez Android pide permitir **instalar apps de este origen**: actívalo y regresa.
+3. Toca **Instalar**. Aparece el ícono **K-Lino**.
+4. Al tocar **Conectar** por primera vez, permite **Dispositivos cercanos** y elige tu K-Lino de la lista. Las siguientes veces se conecta solo.
+
+Para actualizar: **Diagnóstico → Avanzado → Buscar actualización**. Si hay versión nueva, se descarga el APK; ábrelo y toca **Actualizar** (no pierdes tus ajustes).
+
+### Android (sin instalar APK)
 1. Abre la dirección en **Google Chrome** (también sirve Brave).
 2. Toca **Instalar** en el aviso naranja de arriba, o en el menú **⋮ → Agregar a pantalla principal / Instalar app**.
 3. Aparece el ícono **K-Lino** en tu pantalla. Ábrela siempre desde ahí.
