@@ -26,6 +26,8 @@ enum KLineState {
 };
 
 #include "telemetry_types.h"
+#include "honda_frame.h"
+#include "honda_dtc.h"
 
 struct FreezeFrame {
   bool valid = false;
@@ -77,12 +79,6 @@ struct DiagInfo {
   uint8_t d11Byte = 0;
 };
 
-struct DtcCode {
-  int code;
-  const char* name;
-  const char* desc;
-};
-
 class HondaKLine {
 public:
   HondaKLine();
@@ -92,6 +88,8 @@ public:
   
   bool clearDTCs();
   bool getActiveDTCs(std::vector<DtcCode>& activeCodes);
+  // Borrado completo: ECU presente -> motor apagado -> reset -> reconectar -> releer
+  void clearAndVerify(ClearDtcResult& r);
 
   TelemetryData data;
   DiagInfo diag;
@@ -127,13 +125,14 @@ private:
   // Trama: 20 05 [ADDR] [LEN] [CS]  ->  Respuesta: 00 [LEN+3] [DATA x LEN] [CS]
   // Devuelve true si se recibieron LEN bytes con checksum válido.
   bool readMemory(uint8_t addr, uint8_t len, uint8_t* out);
+  bool readMemoryRetry(uint8_t addr, uint8_t len, uint8_t* out, int attempts);
+  // Lee el bloque 0x00 (RPM, VSS, MIL...) con reintentos y actualiza data.*
+  bool readStatus();
+  void applyStatusBlock(const uint8_t* d);
 
   // Send a command frame and receive response
   // Returns number of response bytes, or 0 on failure
   int sendCommand(const uint8_t* cmd, int cmdLen, uint8_t* respBuf, int respBufSize, int timeoutMs = 250);
-  
-  // Honda checksum: (0x100 - sum) & 0xFF  (la suma de toda la trama da 0x00)
-  uint8_t calcChecksum(const uint8_t* data, int len);
   
   // Thermistor conversion for Honda ECT & IAT
   int calculateHondaTemp(uint8_t raw);

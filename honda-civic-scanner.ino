@@ -69,11 +69,14 @@ void bleSendText(const String &str) {
   String full = str.endsWith("\n") ? str : (str + "\n");
   size_t len = full.length();
   const uint8_t *data = (const uint8_t *)full.c_str();
-  // Transmitir en bloques de máximo 128 bytes
+  // Bloques de máximo 128 bytes y nunca más que MTU-3 (el stack BLE trunca el resto)
+  uint16_t mtu = pServer ? pServer->getPeerMTU(pServer->getConnId()) : 23;
+  size_t maxChunk = (mtu > 23) ? (size_t)(mtu - 3) : 20;
+  if (maxChunk > 128) maxChunk = 128;
   size_t offset = 0;
   while (offset < len) {
     size_t chunk = len - offset;
-    if (chunk > 128) chunk = 128;
+    if (chunk > maxChunk) chunk = maxChunk;
     pTxCharacteristic->setValue((uint8_t *)(data + offset), chunk);
     pTxCharacteristic->notify();
     offset += chunk;
@@ -125,23 +128,14 @@ void handlePendingCmd(PendingCmd cmd) {
         snprintf(errBuf, sizeof(errBuf), "{\"type\":\"dtc\",\"ok\":false,\"error\":\"%s\"}", honda.diag.lastError);
         bleSendText(errBuf);
       }
+      lastBleNotify = millis(); // Evita que la trama binaria salga pegada al JSON
       break;
     }
     case CMD_CLEAR_DTC: {
-      bool clearAck = honda.clearDTCs();
-      delay(800); // Esperar reinicio interno de la ECU P2P tras comando 21 04 01 DA
-      bool reinitOk = honda.sendInit(); // Reconecta y lee bloque 0x00 (actualizando data.mil real)
-      std::vector<DtcCode> remainingCodes;
-      bool verifyOk = reinitOk && honda.getActiveDTCs(remainingCodes);
-      int remainingCount = verifyOk ? (int)remainingCodes.size() : -1;
-
-      char clearBuf[180];
-      snprintf(clearBuf, sizeof(clearBuf),
-               "{\"type\":\"clearDtc\",\"ack\":%s,\"verifyOk\":%s,\"remaining\":%d,\"mil\":%s}",
-               clearAck ? "true" : "false",
-               verifyOk ? "true" : "false",
-               remainingCount,
-               honda.data.mil ? "true" : "false");
+      ClearDtcResult r;
+      honda.clearAndVerify(r);
+      char clearBuf[160];
+      formatClearDtcJson(r, clearBuf, sizeof(clearBuf));
       bleSendText(clearBuf);
       lastBleNotify = millis();
       break;

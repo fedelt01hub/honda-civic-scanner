@@ -25,48 +25,6 @@ HondaKLine honda;
 //   0x20 STFT 0x21 LTFT ... 0x40-0x5F códigos de falla (1 nibble por código)
 // ============================================================================
 
-// Known Honda PGM-FI Diagnostic Trouble Codes (Civic 1996-2000)
-static const DtcCode HONDA_DTC_TABLE[] = {
-  { 1,  "P0131/P0132 - Sensor O2 Primario (S1)", "Voltaje bajo o alto en sensor de oxígeno primario (A/F)." },
-  { 3,  "P0107/P0108 - Sensor MAP",              "Lectura de presión absoluta del múltiple fuera de rango eléctrico." },
-  { 4,  "P0335/P0336 - Sensor CKP (Cigüeñal)",   "Pérdida de señal de posición del cigüeñal (Crankshaft Position)." },
-  { 5,  "P0106/P1128 - Sensor MAP (Rango)",      "Falla mecánica o fuga de vacío en el colector de admisión." },
-  { 6,  "P0117/P0118 - Sensor ECT (Refrigerante)", "Falla o circuito abierto en sensor de temperatura de refrigerante." },
-  { 7,  "P0122/P0123 - Sensor TPS (Acelerador)", "Falla de potenciómetro o voltaje anormal en mariposa de aceleración." },
-  { 8,  "P1359/P1361 - Sensor TDC (Punto Muerto)", "Falla en sensor de posición de cilindro / distribuidor." },
-  { 9,  "P1381/P1382 - Sensor CYP (Cilindro 1)", "Falla en señal de identificación de cilindro 1 en distribuidor." },
-  { 10, "P0111/P0112 - Sensor IAT (Aire Admisión)", "Falla en sensor de temperatura de aire de admisión." },
-  { 12, "P1491/P1498 - Sistema EGR",             "Falla en la válvula o sensor de elevación de recirculación EGR." },
-  { 13, "P1106/P1107 - Sensor BARO",             "Falla en el sensor de presión barométrica atmosférica." },
-  { 14, "P0505/P1508 - Válvula IACV",            "Falla en circuito o atasco de la válvula de control de marcha mínima." },
-  { 16, "Inyectores de Combustible",             "Circuito abierto o falla en el circuito de inyectores." },
-  { 17, "P0500/P0501 - Sensor VSS (Velocímetro)","Pérdida de señal del sensor de velocidad del vehículo." },
-  { 20, "P1297/P1298 - Sensor ELD (Carga Eléc.)","Falla en detector de carga eléctrica (fusiblera bajo capó)." },
-  { 21, "P1259 - Solenoide VTEC",                "Falla en circuito o solenoide de accionamiento VTEC." },
-  { 22, "P1259 - Switch Presión VTEC",           "Falla en interruptor de presión de aceite del VTEC." },
-  { 23, "P0325 - Sensor Knock (Detonación)",     "Falla en el sensor de cascabeleo o circuito del sensor knock." },
-  { 30, "P1655 - Comunicación A/T (TMA/TMB)",    "Falla en la línea de comunicación de transmisión automática." },
-  { 41, "P0135/P1166 - Calefactor O2 Primario",  "Resistencia calefactora del sensor O2 primario dañada o quemada." },
-  { 43, "Sistema de Combustible",                "Falla en suministro o control de mezcla de combustible." },
-  { 45, "P0171/P0172 - Mezcla Pobre / Rica",     "Límite de compensación de combustible (Fuel Trim) superado." },
-  { 48, "P1162/P1168 - Sensor O2 (Línea LABEL)", "Falla de circuito en sensor de oxígeno primario." },
-  { 54, "P1336/P1337 - Sensor CKF (Fluctuación)","Falla en sensor de fluctuación de cigüeñal (detrás de polea)." },
-  { 61, "P0133/P1163 - Sensor O2 (Lento)",       "Respuesta lenta en sensor de oxígeno primario." },
-  { 63, "P0137/P0138 - Sensor O2 Secundario (S2)", "Voltaje bajo/alto o respuesta lenta en sensor O2 después del catalizador." },
-  { 65, "P0141 - Calefactor O2 Secundario (S2)",  "Resistencia calefactora del sensor O2 secundario dañada." },
-  { 67, "P0420 - Catalizador (Baja Eficiencia)", "Eficiencia del convertidor catalítico por debajo del umbral mínimo." },
-  { 70, "P0700/P0300 - Transmisión A/T / Misfire","Falla en caja automática o fallo de encendido múltiple." },
-  { 71, "P0301 - Misfire Cilindro 1",            "Fallo de encendido detectado en el cilindro 1." },
-  { 72, "P0302 - Misfire Cilindro 2",            "Fallo de encendido detectado en el cilindro 2." },
-  { 73, "P0303 - Misfire Cilindro 3",            "Fallo de encendido detectado en el cilindro 3." },
-  { 74, "P0304 - Misfire Cilindro 4",            "Fallo de encendido detectado en el cilindro 4." },
-  { 80, "P0401 - Sistema EGR (Flujo)",           "Flujo de recirculación de gases EGR insuficiente." },
-  { 86, "P0116 - Sensor ECT (Rango)",            "Rango o rendimiento anormal en sensor de temperatura de refrigerante." },
-  { 90, "P1456/P1457 - Fuga Sistema EVAP",       "Fuga detectada en tanque de combustible o cánister EVAP." },
-  { 91, "P0451/P0452 - Presión Tanque Gasolina", "Falla en sensor de presión del tanque de combustible." },
-  { 92, "P0441 - Purga Sistema EVAP",            "Flujo de purga insuficiente en el sistema EVAP." }
-};
-
 HondaKLine::HondaKLine() {
   _serial = &Serial1;
   memset(_log, 0, sizeof(_log));
@@ -163,17 +121,6 @@ void HondaKLine::begin(int rxPin, int txPin) {
 }
 
 // ============================================================================
-// Checksum: (0x100 - sum_of_all_bytes) & 0xFF
-// ============================================================================
-uint8_t HondaKLine::calcChecksum(const uint8_t* data, int len) {
-  uint16_t sum = 0;
-  for (int i = 0; i < len; i++) {
-    sum += data[i];
-  }
-  return (uint8_t)((0x100 - (sum & 0xFF)) & 0xFF);
-}
-
-// ============================================================================
 // Log hex bytes to diag struct for debug display
 // ============================================================================
 void HondaKLine::logHex(const char* prefix, const uint8_t* buf, int len) {
@@ -214,11 +161,8 @@ bool HondaKLine::sendInit() {
   data.connected = true;
   data.lastSuccessTime = millis();
 
-  // Actualizar estado real del testigo Check Engine (MIL) desde el bloque 0x00 recién leído
-  diag.d8Byte  = buf[8];
-  diag.d10Byte = buf[10];
-  diag.d11Byte = buf[11];
-  data.mil = ((buf[11] & (1 << 5)) != 0) || ((buf[11] & (1 << 6)) != 0);
+  // Estado real (RPM, VSS, MIL...) desde el bloque 0x00 recién leído
+  applyStatusBlock(buf);
   
   klog("CONEXIÓN EXITOSA CON LA ECU (MIL=%d)", data.mil ? 1 : 0);
   snprintf(diag.lastError, sizeof(diag.lastError), "Conectado OK (intento #%d)", diag.initAttempts);
@@ -229,8 +173,8 @@ bool HondaKLine::sendInit() {
 // Lee LEN bytes de la memoria de la ECU a partir de ADDR.
 // ============================================================================
 bool HondaKLine::readMemory(uint8_t addr, uint8_t len, uint8_t* out) {
-  uint8_t req[5] = {0x20, 0x05, addr, len, 0};
-  req[4] = calcChecksum(req, 4);
+  uint8_t req[5];
+  buildReadRequest(addr, len, req);
 
   uint8_t resp[40];
   int expected = len + 3;  // 00 + LEN+3 + DATA + CS
@@ -239,25 +183,94 @@ bool HondaKLine::readMemory(uint8_t addr, uint8_t len, uint8_t* out) {
   diag.cmdSent++;
   int rxLen = sendCommand(req, 5, resp, expected, 200);
 
-  if (rxLen < expected) {
-    diag.cmdTimeout++;
-    if (rxLen > 0) logHex("RX-PARCIAL", resp, rxLen);
-    snprintf(diag.lastError, sizeof(diag.lastError), "Timeout addr %02X (%d/%d bytes)", addr, rxLen, expected);
-    klog("ECU NO CONTESTA: addr %02X, %d/%d bytes", addr, rxLen, expected);
-    return false;
-  }
-
-  // La suma de toda la trama (incluido el CS) debe ser 0x00
-  if (calcChecksum(resp, expected - 1) != resp[expected - 1]) {
-    diag.cmdCrcFail++;
-    logHex("RX-CRC-MAL", resp, rxLen);
-    snprintf(diag.lastError, sizeof(diag.lastError), "Checksum inválido addr %02X", addr);
-    return false;
+  switch (checkReadResponse(resp, rxLen, len)) {
+    case READ_SHORT:
+      diag.cmdTimeout++;
+      if (rxLen > 0) logHex("RX-PARCIAL", resp, rxLen);
+      snprintf(diag.lastError, sizeof(diag.lastError), "Timeout addr %02X (%d/%d bytes)", addr, rxLen, expected);
+      klog("ECU NO CONTESTA: addr %02X, %d/%d bytes", addr, rxLen, expected);
+      return false;
+    case READ_BAD_HEADER:
+      diag.cmdCrcFail++;
+      logHex("RX-CABECERA-MAL", resp, rxLen);
+      snprintf(diag.lastError, sizeof(diag.lastError), "Cabecera inválida addr %02X", addr);
+      return false;
+    case READ_BAD_CHECKSUM:
+      diag.cmdCrcFail++;
+      logHex("RX-CRC-MAL", resp, rxLen);
+      snprintf(diag.lastError, sizeof(diag.lastError), "Checksum inválido addr %02X", addr);
+      return false;
+    case READ_OK:
+      break;
   }
 
   diag.cmdOk++;
   data.lastSuccessTime = millis();
   memcpy(out, resp + 2, len);
+  return true;
+}
+
+// ============================================================================
+// Bloque 0x00: RPM, VSS, estados discretos y MIL (usado por update, sendInit y DTC)
+// ============================================================================
+void HondaKLine::applyStatusBlock(const uint8_t* d) {
+  uint16_t raw = (d[0] << 8) | d[1];
+  if (ecuType == 1) {
+    data.rpm = (raw == 0xFFFF) ? 0 : (int)(1875000UL / ((uint32_t)raw + 1));
+  } else {
+    data.rpm = raw / 4;
+  }
+  if (data.rpm < 0 || data.rpm > 9999) data.rpm = 0;
+  data.vss = d[2];
+
+  // Guardar representación hex cruda de la fila 0x00 para diagnóstico
+  snprintf(diag.row0Hex, sizeof(diag.row0Hex),
+           "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
+           d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],
+           d[8], d[9], d[10], d[11], d[12], d[13], d[14], d[15]);
+
+  diag.d8Byte = d[8];
+  diag.d10Byte = d[10];
+  diag.d11Byte = d[11];
+
+  // Estados discretos (0x08, 0x0A y 0x0B)
+  // Dirección 0x08 (d[8]): Bit 1 = Relé A/C, Bit 2 = Switch A/C, Bit 3 = Switch Pedal Freno
+  // Bit 4 y Bit 5 = Selector P/N (transmisión automática ATP)
+  // Bit 7 = Switch presión VTEC (en variantes D16Y8 P2P OBD2)
+  // Dirección 0x0A (d[10]): Bit 2 = Solenoide VTEC (VTS), Bit 3 = Switch Presión VTEC (VTPS)
+  // Dirección 0x0B (d[11]): Bit 5 / Bit 6 = Indicador de falla Check Engine (MIL) en ECU
+  data.vtec = ((d[10] & (1 << 2)) != 0) || ((d[10] & (1 << 3)) != 0) || ((d[8] & (1 << 7)) != 0);
+  data.brake = (d[8] & (1 << 3)) != 0;
+  data.ac = ((d[8] & (1 << 2)) != 0) || ((d[8] & (1 << 1)) != 0);
+  data.parkNeutral = ((d[8] & (1 << 4)) != 0) || ((d[8] & (1 << 5)) != 0);
+  // En ECU P2P (D16Y8), 0x0B reporta 0x41 con Check Engine activo (Bit 6 / Bit 5)
+  data.mil = ((d[11] & (1 << 5)) != 0) || ((d[11] & (1 << 6)) != 0);
+
+  // Marcha estimada (Civic 4-velocidades automático)
+  if (data.vss > 5 && data.rpm > 600) {
+    float ratio = (float)data.rpm / (float)data.vss;
+    if (ratio > 75.0f) data.gear = 1;
+    else if (ratio > 48.0f) data.gear = 2;
+    else if (ratio > 33.0f) data.gear = 3;
+    else data.gear = 4;
+  } else {
+    // En reposo: N si la palanca está en P/N, o 1 si está engranado en D o R
+    data.gear = data.parkNeutral ? 0 : 1;
+  }
+}
+
+bool HondaKLine::readMemoryRetry(uint8_t addr, uint8_t len, uint8_t* out, int attempts) {
+  for (int i = 0; i < attempts; i++) {
+    if (readMemory(addr, len, out)) return true;
+    delay(25);
+  }
+  return false;
+}
+
+bool HondaKLine::readStatus() {
+  uint8_t d[16];
+  if (!readMemoryRetry(0x00, 0x10, d, 3)) return false;
+  applyStatusBlock(d);
   return true;
 }
 
@@ -375,52 +388,9 @@ void HondaKLine::update() {
   
   switch (_pollStep) {
     case 0: {
-      // Bloque 0x00: RPM, VSS, VTEC, A/C, Freno, P/N
+      // Bloque 0x00: RPM, VSS, VTEC, A/C, Freno, P/N, MIL
       if (readMemory(0x00, 0x10, d)) {
-        data.lastSuccessTime = millis();
-        uint16_t raw = (d[0] << 8) | d[1];
-        if (ecuType == 1) {
-          data.rpm = (raw == 0xFFFF) ? 0 : (int)(1875000UL / ((uint32_t)raw + 1));
-        } else {
-          data.rpm = raw / 4;
-        }
-        if (data.rpm < 0 || data.rpm > 9999) data.rpm = 0;
-        data.vss = d[2];
-
-        // Guardar representación hex cruda de la fila 0x00 para diagnóstico
-        snprintf(diag.row0Hex, sizeof(diag.row0Hex),
-                 "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
-                 d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],
-                 d[8], d[9], d[10], d[11], d[12], d[13], d[14], d[15]);
-
-        diag.d8Byte = d[8];
-        diag.d10Byte = d[10];
-        diag.d11Byte = d[11];
-
-        // Estados discretos (0x08, 0x0A y 0x0B)
-        // Dirección 0x08 (d[8]): Bit 1 = Relé A/C, Bit 2 = Switch A/C, Bit 3 = Switch Pedal Freno
-        // Bit 4 y Bit 5 = Selector P/N (transmisión automática ATP)
-        // Bit 7 = Switch presión VTEC (en variantes D16Y8 P2P OBD2)
-        // Dirección 0x0A (d[10]): Bit 2 = Solenoide VTEC (VTS), Bit 3 = Switch Presión VTEC (VTPS)
-        // Dirección 0x0B (d[11]): Bit 5 / Bit 6 = Indicador de falla Check Engine (MIL) en ECU
-        data.vtec = ((d[10] & (1 << 2)) != 0) || ((d[10] & (1 << 3)) != 0) || ((d[8] & (1 << 7)) != 0);
-        data.brake = (d[8] & (1 << 3)) != 0;
-        data.ac = ((d[8] & (1 << 2)) != 0) || ((d[8] & (1 << 1)) != 0);
-        data.parkNeutral = ((d[8] & (1 << 4)) != 0) || ((d[8] & (1 << 5)) != 0);
-        // En ECU P2P (D16Y8), 0x0B reporta 0x41 con Check Engine activo (Bit 6 / Bit 5)
-        data.mil = ((d[11] & (1 << 5)) != 0) || ((d[11] & (1 << 6)) != 0);
-
-        // Marcha estimada (Civic 4-velocidades automático)
-        if (data.vss > 5 && data.rpm > 600) {
-          float ratio = (float)data.rpm / (float)data.vss;
-          if (ratio > 75.0f) data.gear = 1;
-          else if (ratio > 48.0f) data.gear = 2;
-          else if (ratio > 33.0f) data.gear = 3;
-          else data.gear = 4;
-        } else {
-          // En reposo: N si la palanca está en P/N, o 1 si está engranado en D o R
-          data.gear = data.parkNeutral ? 0 : 1;
-        }
+        applyStatusBlock(d);
       }
       _pollStep = 1;
       break;
@@ -513,38 +483,16 @@ void HondaKLine::update() {
 }
 
 // ============================================================================
-// Read DTC codes
-// Memoria 0x40-0x5F: cada byte contiene 2 códigos (nibble alto = código par,
-// nibble bajo = código impar). Basado en kerpz/ArduinoHondaOBD.
+// Leer códigos DTC (decodificación en honda_dtc.h, probada en test/test_dtc)
 // ============================================================================
-static bool isKnownDtc(int codeNum) {
-  for (size_t t = 0; t < sizeof(HONDA_DTC_TABLE) / sizeof(HONDA_DTC_TABLE[0]); t++) {
-    if (HONDA_DTC_TABLE[t].code == codeNum) return true;
-  }
-  return false;
-}
-
-static void pushDtc(std::vector<DtcCode>& v, int codeNum) {
-  // Evitar códigos duplicados
-  for (size_t i = 0; i < v.size(); i++) {
-    if (v[i].code == codeNum) return;
-  }
-  for (size_t t = 0; t < sizeof(HONDA_DTC_TABLE) / sizeof(HONDA_DTC_TABLE[0]); t++) {
-    if (HONDA_DTC_TABLE[t].code == codeNum) {
-      v.push_back(HONDA_DTC_TABLE[t]);
-      return;
-    }
-  }
-  v.push_back({ codeNum, "Código Honda", "Código no listado en la tabla; consulta el manual de servicio." });
-}
-
 bool HondaKLine::getActiveDTCs(std::vector<DtcCode>& activeCodes) {
   activeCodes.clear();
+  diag.freezeFrame = FreezeFrame();   // nunca mostrar el Freeze Frame de una lectura anterior
+  diag.dtcRawHex[2][0] = '\0';
 
   if (data.demo) {
-    // Return sample codes in demo mode
-    activeCodes.push_back(HONDA_DTC_TABLE[0]); // Code 1 (O2)
-    activeCodes.push_back(HONDA_DTC_TABLE[9]); // Code 14 (IACV)
+    activeCodes.push_back(lookupDtc(1));   // O2
+    activeCodes.push_back(lookupDtc(14));  // IACV
     data.dtcCount = (int)activeCodes.size();
     diag.freezeFrame.valid    = true;
     diag.freezeFrame.rawVss   = 0x00;
@@ -565,60 +513,39 @@ bool HondaKLine::getActiveDTCs(std::vector<DtcCode>& activeCodes) {
     return true;
   }
 
+  // Confirma que la ECU contesta y refresca el MIL antes de leer la memoria de fallas
+  if (!readStatus()) {
+    snprintf(diag.lastError, sizeof(diag.lastError), "ECU sin respuesta: pon la llave en ON (II)");
+    klog("DTC: la ECU no respondió al bloque 0x00");
+    return false;
+  }
+
+  int codes[DTC_MAX_CODES];
+  int n = 0;
   uint8_t d[16];
-  // Leer bloques 0x40 (row 0) y 0x50 (row 1) obligatorios
+
   for (int row = 0; row < 2; row++) {
     uint8_t addr = 0x40 + row * 0x10;
-    bool ok = false;
-    for (int attempt = 0; attempt < 3 && !ok; attempt++) {
-      ok = readMemory(addr, 0x10, d);
-      if (!ok) delay(25);
-    }
-    if (!ok) {
+    if (!readMemoryRetry(addr, 0x10, d, 3)) {
       klog("ERROR: Fallo al leer memoria DTC en 0x%02X tras 3 intentos", addr);
       return false; // NUNCA reportar "sin códigos" si la comunicación falló
     }
-
     snprintf(diag.dtcRawHex[row], sizeof(diag.dtcRawHex[row]),
              "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
              d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],
              d[8], d[9], d[10], d[11], d[12], d[13], d[14], d[15]);
     logHex(row == 0 ? "DTC40" : "DTC50", d, 16);
-
-    for (int i = 0; i < 16; i++) {
-      if (d[i] == 0xFF) continue; // Ignorar byte sin inicializar
-      int baseCode = row * 32 + i * 2;
-      if (d[i] >> 4) {
-        if (baseCode > 0) pushDtc(activeCodes, baseCode);
-        else klog("DTC byte 0 hi-nibble set (bandera interna ECU, ignorando)");
-      }
-      if (d[i] & 0x0F) {
-        int oddCode = baseCode + 1;
-        pushDtc(activeCodes, oddCode);
-      }
-    }
+    n = decodeDtcBytes(d, 16, row * 32, codes, n, DTC_MAX_CODES);
   }
 
-  // Leer bloque extendido 0x60 (row 2: códigos 64 a 67 y Freeze Frame de sensores)
-  if (readMemory(0x60, 0x10, d)) {
+  // Fila 0x60 opcional: código 65 y Freeze Frame (0x61-0x68)
+  if (readMemoryRetry(0x60, 0x10, d, 2)) {
     snprintf(diag.dtcRawHex[2], sizeof(diag.dtcRawHex[2]),
              "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
              d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],
              d[8], d[9], d[10], d[11], d[12], d[13], d[14], d[15]);
     logHex("DTC60", d, 16);
-
-    // En ECU Honda P2P (3-pin), solo el byte 0x60 (i = 0) contiene códigos extendidos (64 y 65).
-    // A partir de 0x61 (i >= 1) inicia el Freeze Frame: 0x61=VSS, 0x62-0x63=RPM, 0x64=ECT, 0x65=IAT, 0x66=MAP, 0x67=BARO, 0x68=TPS.
-    for (int i = 0; i < 1; i++) {
-      if (d[i] == 0x00 || d[i] == 0xFF) continue;
-      int baseCode = 64 + i * 2;
-      if ((d[i] >> 4) && isKnownDtc(baseCode)) {
-        pushDtc(activeCodes, baseCode);
-      }
-      if ((d[i] & 0x0F) && isKnownDtc(baseCode + 1)) {
-        pushDtc(activeCodes, baseCode + 1);
-      }
-    }
+    n = decodeDtcRow60(d, codes, n, DTC_MAX_CODES);
 
     // Decodificar Freeze Frame si hay datos válidos grabados (0x61 a 0x68)
     uint8_t rawVss   = d[1]; // 0x61
@@ -657,17 +584,18 @@ bool HondaKLine::getActiveDTCs(std::vector<DtcCode>& activeCodes) {
            diag.freezeFrame.rpm, diag.freezeFrame.vss,
            diag.freezeFrame.ect, diag.freezeFrame.iat, diag.freezeFrame.map,
            diag.freezeFrame.baro, diag.freezeFrame.tps);
-    } else {
-      diag.freezeFrame.valid = false;
     }
   }
 
-  data.dtcCount = (int)activeCodes.size();
+  for (int i = 0; i < n; i++) activeCodes.push_back(lookupDtc(codes[i]));
+  data.dtcCount = n;
+  klog("DTC: %d código(s) activos, MIL=%d", n, data.mil ? 1 : 0);
   return true;
 }
 
 // ============================================================================
-// Clear DTC codes (reset ECU): 21 04 01 DA  ->  01 03 FC
+// Reset de ECU / borrar códigos: 21 04 01 DA  ->  01 03 FC
+// Si no llega nada, se reintenta una vez (el reset es idempotente).
 // ============================================================================
 bool HondaKLine::clearDTCs() {
   diag.freezeFrame = FreezeFrame();
@@ -677,23 +605,60 @@ bool HondaKLine::clearDTCs() {
     return true;
   }
 
-  uint8_t clearReq[] = {0x21, 0x04, 0x01, 0xDA};
   uint8_t resp[8];
-  
-  int rxLen = sendCommand(clearReq, 4, resp, 3, 400);
-  logHex("CLEAR", resp, rxLen);
-  
-  bool ack = (rxLen == 3 && resp[0] == 0x01 && resp[1] == 0x03 && resp[2] == 0xFC);
-  if (ack) {
-    klog("ECU ACK: Códigos borrados exitosamente (01 03 FC)");
-    data.dtcCount = 0;
-    data.mil = false;
-    _initialized = false;
-    data.connected = false; // La ECU reinicia la interfaz de comunicación tras el reset
-  } else {
-    klog("ECU NACK / Respuesta inesperada al borrar (%d bytes)", rxLen);
+  int rxLen = 0;
+  for (int attempt = 0; attempt < 2 && rxLen == 0; attempt++) {
+    rxLen = sendCommand(CLEAR_DTC_REQ, 4, resp, 3, 400);
   }
+  if (rxLen > 0) logHex("CLEAR", resp, rxLen);
+  else klog("CLEAR: la ECU no respondió al reset");
+
+  bool ack = isClearAck(resp, rxLen);
+  if (ack) klog("ECU ACK: reset aceptado (01 03 FC)");
+  else klog("ECU sin ACK al borrar (%d bytes); se verifica releyendo la memoria", rxLen);
+
+  data.dtcCount = 0;
+  _initialized = false;
+  data.connected = false; // la ECU reinicia su interfaz tras el reset
   return ack;
+}
+
+void HondaKLine::clearAndVerify(ClearDtcResult& r) {
+  r = ClearDtcResult();
+
+  if (data.demo) {
+    clearDTCs();
+    r.ack = true; r.verifyOk = true; r.remaining = 0; r.mil = false;
+    return;
+  }
+
+  if (!readStatus()) {
+    r.error = "no_ecu";
+    snprintf(diag.lastError, sizeof(diag.lastError), "ECU sin respuesta: pon la llave en ON (II)");
+    klog("BORRAR cancelado: la ECU no responde");
+    return;
+  }
+  if (!clearDtcAllowed(data.rpm, data.vss)) {
+    r.error = "engine_running";
+    klog("BORRAR rechazado: motor encendido o en movimiento (RPM=%d VSS=%d)", data.rpm, data.vss);
+    return;
+  }
+
+  r.ack = clearDTCs();
+
+  // La ECU tarda en volver tras el reset: reintentar hasta 6 x 500 ms
+  bool reinitOk = false;
+  for (int i = 0; i < 6 && !reinitOk; i++) {
+    delay(500);
+    reinitOk = sendInit();
+  }
+
+  std::vector<DtcCode> remaining;
+  r.verifyOk = reinitOk && getActiveDTCs(remaining);
+  r.remaining = r.verifyOk ? (int)remaining.size() : -1;
+  r.mil = data.mil;
+  klog("BORRAR: ack=%d verificado=%d restantes=%d MIL=%d",
+       r.ack ? 1 : 0, r.verifyOk ? 1 : 0, r.remaining, r.mil ? 1 : 0);
 }
 
 void HondaKLine::setDemoMode(bool enable) {

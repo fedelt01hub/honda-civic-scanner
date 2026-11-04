@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stddef.h>
 
-#define FW_VERSION "1.1.0"   // 1.1.0: nombre BLE K-Lino-XXXX
+#define FW_VERSION "1.2.0"   // 1.2.0: DTC confiables (borrado seguro y verificado)
 #define HW_REV "proto"   // cambiar a "A" al flashear la PCB rev A
 
 // Nombre BLE único por unidad: "<prefijo>-XXXX" con los 2 últimos bytes de la MAC.
