@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>K-Lino v1.0 - Escáner & Datalogger</title>
+  <title>K-Lino v1.1 - Escáner & Datalogger</title>
   
   <!-- Cache Control (Evita que el navegador retenga versiones viejas al recargar) -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -22,7 +22,7 @@
 
   <style>
     /* =========================================================================
-     * K-LINO v1.0 — Estilo "tablero OEM": negro, blanco, iluminación ámbar
+     * K-LINO v1.1 — Estilo "tablero OEM": negro, blanco, iluminación ámbar
      * ========================================================================= */
     @font-face {
       font-family: 'Barlow Condensed';
@@ -817,16 +817,158 @@
     .modal-text { font-size: 0.86rem; color: var(--text-dim); margin-bottom: 16px; line-height: 1.45; }
     .modal-actions { display: flex; gap: 8px; }
     .modal-btn { flex: 1; padding: 11px; border-radius: 10px; border: none; font-weight: 800; cursor: pointer; }
+    /* ------------------------------------------------------- Splash de arranque
+     * "Chequeo de tablero" al abrir la app (~1.6 s). Solo CSS: si el JS falla,
+     * igual se oculta solo al terminar splashOut. Estado base = estado final. */
+    #splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      cursor: pointer;
+      animation: splashOut 300ms ease-in 1300ms both;
+    }
+    #splash.skip { animation: splashOut 150ms ease-in 0ms both; }
+    .splash-gauge { width: min(64vw, 280px); height: auto; overflow: visible; }
+    .splash-arc-ghost { fill: none; stroke: #1a1a1f; stroke-width: 6; stroke-linecap: round; }
+    .splash-arc {
+      fill: none;
+      stroke: var(--amber);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-dasharray: 336;
+      stroke-dashoffset: 0;
+      filter: drop-shadow(0 0 4px rgba(255, 138, 30, 0.6));
+      animation: splashArc 300ms ease-out 60ms both;
+    }
+    .splash-ticks { animation: splashFade 200ms linear 180ms both; }
+    .splash-ticks line { stroke: var(--text); stroke-width: 2.5; stroke-linecap: round; }
+    .splash-ticks line.red { stroke: var(--red); }
+    .splash-ticks text {
+      fill: var(--text-dim);
+      font-family: var(--num);
+      font-size: 12px;
+      text-anchor: middle;
+    }
+    .splash-ticks text.red { fill: var(--red); }
+    .splash-needle {
+      fill: var(--amber);
+      transform-box: view-box;
+      transform-origin: 100px 112px;
+      transform: rotate(-120deg);
+      filter: drop-shadow(0 0 3px rgba(255, 138, 30, 0.7));
+      animation: splashNeedle 600ms cubic-bezier(0.45, 0, 0.55, 1) 300ms both;
+    }
+    .splash-hub { fill: #222228; stroke: var(--amber); stroke-width: 1.5; }
+    .splash-lcd {
+      font-family: var(--num);
+      font-size: clamp(2.6rem, 14vw, 4rem);
+      letter-spacing: 0.18em;
+      line-height: 1;
+      padding: 10px 18px 8px 26px;
+      border: 1px solid #1d1d22;
+      border-radius: 10px;
+      background: #08080a;
+      box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.8);
+      color: var(--amber);
+    }
+    .splash-lcd span {
+      display: inline-block;
+      text-shadow: 0 0 10px rgba(255, 138, 30, 0.75), 0 0 2px rgba(255, 210, 160, 0.9);
+      animation: splashLetter 200ms linear calc(400ms + var(--i) * 60ms) both;
+    }
+    .splash-sub {
+      font-family: var(--num);
+      font-size: 0.85rem;
+      letter-spacing: 0.3em;
+      color: var(--text-dim);
+      animation: splashFade 200ms linear 800ms both;
+    }
+    .splash-telltales { display: flex; gap: 8px; }
+    .splash-telltales .warn-badge { animation: splashBulb 450ms linear 650ms both; }
+
+    @keyframes splashArc    { from { stroke-dashoffset: 336; } to { stroke-dashoffset: 0; } }
+    @keyframes splashFade   { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes splashNeedle {
+      0%   { transform: rotate(-120deg); }
+      50%  { transform: rotate(120deg); }
+      100% { transform: rotate(-120deg); }
+    }
+    @keyframes splashLetter {          /* foco que enciende con un parpadeo */
+      0%   { opacity: 0.07; text-shadow: none; }
+      35%  { opacity: 1; }
+      50%  { opacity: 0.35; }
+      65%  { opacity: 1; }
+      100% { opacity: 1; }
+    }
+    @keyframes splashBulb {            /* chequeo de testigos: prenden y se apagan */
+      0%   { opacity: 0; }
+      12%  { opacity: 1; }
+      80%  { opacity: 1; }
+      100% { opacity: 0.12; }
+    }
+    @keyframes splashOut {
+      from { opacity: 1; visibility: visible; }
+      to   { opacity: 0; visibility: hidden; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #splash * { animation: none !important; }
+      #splash { animation: splashOut 250ms ease-in 400ms both; }
+    }
   </style>
 </head>
 <body>
+
+  <!-- Splash de arranque: chequeo de tablero (se quita solo a los ~1.6 s; tocar para saltar) -->
+  <div id="splash" aria-hidden="true">
+    <svg class="splash-gauge" viewBox="0 0 200 170">
+      <path class="splash-arc-ghost" d="M 30.7 152 A 80 80 0 1 1 169.3 152"/>
+      <path class="splash-arc" d="M 30.7 152 A 80 80 0 1 1 169.3 152"/>
+      <g class="splash-ticks">
+        <line x1="41.1" y1="146" x2="30.7" y2="152"/>
+        <line x1="32" y1="112" x2="20" y2="112"/>
+        <line x1="41.1" y1="78" x2="30.7" y2="72"/>
+        <line x1="66" y1="53.1" x2="60" y2="42.7"/>
+        <line x1="100" y1="44" x2="100" y2="32"/>
+        <line x1="134" y1="53.1" x2="140" y2="42.7"/>
+        <line x1="158.9" y1="78" x2="169.3" y2="72"/>
+        <line class="red" x1="168" y1="112" x2="180" y2="112"/>
+        <line class="red" x1="158.9" y1="146" x2="169.3" y2="152"/>
+        <text x="51.5" y="144">0</text>
+        <text x="44" y="116">1</text>
+        <text x="51.5" y="88">2</text>
+        <text x="72" y="67.5">3</text>
+        <text x="100" y="60">4</text>
+        <text x="128" y="67.5">5</text>
+        <text x="148.5" y="88">6</text>
+        <text class="red" x="156" y="116">7</text>
+        <text class="red" x="148.5" y="144">8</text>
+      </g>
+      <path class="splash-needle" d="M 98.4 124 L 99.4 40 L 100.6 40 L 101.6 124 Z"/>
+      <circle class="splash-hub" cx="100" cy="112" r="6"/>
+    </svg>
+    <div class="splash-lcd"><span style="--i:0">K</span><span style="--i:1">-</span><span style="--i:2">L</span><span style="--i:3">I</span><span style="--i:4">N</span><span style="--i:5">O</span></div>
+    <div class="splash-sub">ESCÁNER PGM-FI · K-LINE</div>
+    <div class="splash-telltales">
+      <span class="warn-badge active-cel">CHECK</span>
+      <span class="warn-badge active-vtec">VTEC</span>
+      <span class="warn-badge active-brake">BRAKE</span>
+      <span class="warn-badge active-ac">A/C</span>
+    </div>
+  </div>
 
   <!-- Header: marca K-Lino y Conectar Bluetooth -->
   <header>
     <div class="brand">
       <img src="icon-192.png" class="brand-logo" alt="K-Lino">
       <div>
-        <div class="brand-title">K-LINO <span class="brand-badge">OBD</span> <span class="brand-version" id="brandVersionBadge">v1.0</span></div>
+        <div class="brand-title">K-LINO <span class="brand-badge">K-LINE</span> <span class="brand-version" id="brandVersionBadge">v1.1</span></div>
       </div>
     </div>
     <button id="btnConnect" class="btn-connect" onclick="toggleBleConnection()">
@@ -1153,7 +1295,7 @@
         <div class="sub-block">
           <div class="sub-block-head">
             <span class="sub-heading">Actualizaciones</span>
-            <span id="pwaVersionTag" class="badge-version">v1.0</span>
+            <span id="pwaVersionTag" class="badge-version">v1.1</span>
           </div>
           <div id="updateStatusText" style="font-size:0.78rem; color:var(--text-dim); margin-bottom:12px; line-height:1.4;">
             Esta app funciona 100% offline. Toca el botón para verificar con GitHub si hay una nueva versión disponible.
@@ -1261,7 +1403,7 @@
     // =========================================================================
     // SISTEMA DE ACTUALIZACIÓN MANUAL Y GESTIÓN DE CACHÉ PWA
     // =========================================================================
-    const APP_CURRENT_VERSION = 'v1.0';
+    const APP_CURRENT_VERSION = 'v1.1';
     let toastTimeout = null;
 
     function showToast(msg, duration = 3200, type = 'info') {
@@ -2609,6 +2751,18 @@
     window.addEventListener('DOMContentLoaded', () => {
       initDtcLib();
     });
+
+    // Splash de arranque: tocar para saltar; se quita del DOM al terminar (seguro a 2.5 s)
+    (function initSplash() {
+      const splash = document.getElementById('splash');
+      if (!splash) return;
+      const remove = () => { if (splash.isConnected) splash.remove(); };
+      splash.addEventListener('animationend', (e) => {
+        if (e.target === splash && e.animationName === 'splashOut') remove();
+      });
+      splash.addEventListener('pointerdown', () => splash.classList.add('skip'), { once: true });
+      setTimeout(remove, 2500);
+    })();
 
   </script>
 </body>
