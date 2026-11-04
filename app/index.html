@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>K-Lino v31 - Escáner & Datalogger</title>
+  <title>K-Lino v1.0 - Escáner & Datalogger</title>
   
   <!-- Cache Control (Evita que el navegador retenga versiones viejas al recargar) -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -22,7 +22,7 @@
 
   <style>
     /* =========================================================================
-     * K-LINO v31 — Estilo "tablero OEM": negro, blanco, iluminación ámbar
+     * K-LINO v1.0 — Estilo "tablero OEM": negro, blanco, iluminación ámbar
      * ========================================================================= */
     @font-face {
       font-family: 'Barlow Condensed';
@@ -826,7 +826,7 @@
     <div class="brand">
       <img src="icon-192.png" class="brand-logo" alt="K-Lino">
       <div>
-        <div class="brand-title">K-LINO <span class="brand-badge">OBD</span> <span class="brand-version" id="brandVersionBadge">v31</span></div>
+        <div class="brand-title">K-LINO <span class="brand-badge">OBD</span> <span class="brand-version" id="brandVersionBadge">v1.0</span></div>
       </div>
     </div>
     <button id="btnConnect" class="btn-connect" onclick="toggleBleConnection()">
@@ -1153,7 +1153,7 @@
         <div class="sub-block">
           <div class="sub-block-head">
             <span class="sub-heading">Actualizaciones</span>
-            <span id="pwaVersionTag" class="badge-version">v31</span>
+            <span id="pwaVersionTag" class="badge-version">v1.0</span>
           </div>
           <div id="updateStatusText" style="font-size:0.78rem; color:var(--text-dim); margin-bottom:12px; line-height:1.4;">
             Esta app funciona 100% offline. Toca el botón para verificar con GitHub si hay una nueva versión disponible.
@@ -1261,7 +1261,7 @@
     // =========================================================================
     // SISTEMA DE ACTUALIZACIÓN MANUAL Y GESTIÓN DE CACHÉ PWA
     // =========================================================================
-    const APP_CURRENT_VERSION = 'v31';
+    const APP_CURRENT_VERSION = 'v1.0';
     let toastTimeout = null;
 
     function showToast(msg, duration = 3200, type = 'info') {
@@ -1659,7 +1659,7 @@
       // Reensamblaje seguro de fragmentos JSON delimitados por '\n'
       try {
         bleTextBuffer += textDecoder.decode(value, { stream: true });
-        if (bleTextBuffer.length > 4096) bleTextBuffer = ''; // Protección contra desbordamiento
+        if (bleTextBuffer.length > 16384) bleTextBuffer = ''; // Protección contra desbordamiento
         while (bleTextBuffer.includes('\n')) {
           const idx = bleTextBuffer.indexOf('\n');
           const line = bleTextBuffer.substring(0, idx).trim();
@@ -2256,6 +2256,15 @@
     // =========================================================================
     // DIAGNOSTIC & DTC CODES
     // =========================================================================
+    let dtcTimeoutTimer = null;
+    function armDtcTimeout(ms) {
+      clearTimeout(dtcTimeoutTimer);
+      dtcTimeoutTimer = setTimeout(() => {
+        dtcTimeoutTimer = null;
+        renderDtcList({ ok: false, error: 'El escáner no respondió. Revisa que el Bluetooth siga conectado y vuelve a intentar.' });
+      }, ms);
+    }
+
     function fetchDtcs() {
       if (!isConnected) {
         showToast(NEED_BLE_MSG, 3500, 'warn');
@@ -2263,11 +2272,14 @@
       }
       bleCmdQueue.length = 0; // Limpiar GET_DIAG pendientes para prioridad inmediata
       sendBleCmd('GET_DTC');
+      armDtcTimeout(10000);
       document.getElementById('dtcList').innerHTML =
         '<div style="text-align:center; padding: 20px; color: var(--text-dim);">Consultando memoria 0x40-0x6F de la ECU...</div>';
     }
 
     function renderDtcList(msg) {
+      clearTimeout(dtcTimeoutTimer);
+      dtcTimeoutTimer = null;
       const list = document.getElementById('dtcList');
       if (!msg) return;
 
@@ -2367,16 +2379,25 @@
     }
 
     function handleClearDtcResponse(msg) {
-      if (msg.ack) {
-        if (msg.verifyOk && msg.remaining === 0 && !msg.mil) {
-          showInfoModal('Códigos borrados', 'La ECU confirmó el borrado y la memoria está limpia.');
-        } else if (!msg.verifyOk) {
-          showToast('La ECU aceptó el borrado y se está reiniciando. Verificando memoria...', 4000, 'ok');
-        } else {
-          showInfoModal('La falla sigue presente', 'La ECU aceptó el borrado, pero la falla se volvió a detectar de inmediato. Revisa el sensor o circuito indicado.');
-        }
+      clearTimeout(dtcTimeoutTimer);
+      dtcTimeoutTimer = null;
+      // FW >= 1.2.0 manda "cleared" y "error"; con FW viejo se calcula como antes
+      const cleared = (msg.cleared !== undefined)
+        ? msg.cleared
+        : (msg.ack && msg.verifyOk && msg.remaining === 0 && !msg.mil);
+
+      if (msg.error === 'engine_running') {
+        showInfoModal('Apaga el motor', 'Por seguridad K-Lino no borra códigos con el motor encendido o el auto en movimiento.<br><br>Apaga el motor, deja la llave en <b>ON (II)</b> y vuelve a intentar.');
+      } else if (msg.error === 'no_ecu') {
+        showInfoModal('La ECU no responde', 'No hay comunicación con la computadora del auto.<br><br>Pon la llave en <b>ON (II)</b> y revisa que el K-Lino esté bien conectado al conector de diagnóstico.');
+      } else if (cleared) {
+        showInfoModal('Códigos borrados', 'La memoria de la ECU quedó limpia y el Check Engine está apagado.<br><br>Recuerda: borrar no repara la falla. Si vuelve a aparecer, revisa el sensor o circuito indicado.');
+      } else if (msg.verifyOk) {
+        showInfoModal('La falla sigue presente', 'La ECU se reinició, pero la falla se volvió a detectar de inmediato. Revisa el sensor o circuito indicado.');
+      } else if (msg.ack) {
+        showToast('La ECU aceptó el borrado y se está reiniciando. Verificando memoria...', 4000, 'ok');
       } else {
-        showInfoModal('Borrado no confirmado', 'La ECU no confirmó el comando de borrado.<br><br><span style="color: var(--amber); font-weight: bold;">Importante:</span> en el Civic \'99 el <b>motor debe estar apagado</b> y la llave en posición <b>ON (II)</b> para que la ECU permita borrar códigos.');
+        showInfoModal('Borrado no confirmado', 'La ECU no confirmó el borrado.<br><br><span style="color: var(--amber); font-weight: bold;">Importante:</span> el <b>motor debe estar apagado</b> y la llave en <b>ON (II)</b>.<br><br>Alternativa: quita 10 s el fusible <b>BACK UP</b> de la caja bajo el cofre (ver la tapa).');
       }
       fetchDtcs();
     }
@@ -2397,6 +2418,7 @@
       document.getElementById('dtcList').innerHTML =
         '<div style="text-align:center; padding: 20px; color: var(--amber); font-weight: 700;">Enviando comando de reinicio (21 04 01 DA) a la ECU...</div>';
       sendBleCmd('CLEAR_DTC');
+      armDtcTimeout(15000);
     }
 
     function toggleEcuFormula() {
