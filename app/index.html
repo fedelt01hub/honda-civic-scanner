@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>K-Lino v1.2 - Escáner & Datalogger</title>
+  <title>K-Lino v1.3 - Escáner & Datalogger</title>
   
   <!-- Cache Control (Evita que el navegador retenga versiones viejas al recargar) -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -22,7 +22,7 @@
 
   <style>
     /* =========================================================================
-     * K-LINO v1.2 — Estilo "tablero OEM": negro, blanco, iluminación ámbar
+     * K-LINO v1.3 — Estilo "tablero OEM": negro, blanco, iluminación ámbar
      * ========================================================================= */
     @font-face {
       font-family: 'Barlow Condensed';
@@ -965,7 +965,7 @@
     <div class="brand">
       <img src="icon-192.png" class="brand-logo" alt="K-Lino">
       <div>
-        <div class="brand-title">K-LINO <span class="brand-badge">K-LINE</span> <span class="brand-version" id="brandVersionBadge">v1.2</span></div>
+        <div class="brand-title">K-LINO <span class="brand-badge">K-LINE</span> <span class="brand-version" id="brandVersionBadge">v1.3</span></div>
       </div>
     </div>
     <button id="btnConnect" class="btn-connect" onclick="toggleBleConnection()">
@@ -1306,7 +1306,7 @@
         <div class="sub-block">
           <div class="sub-block-head">
             <span class="sub-heading">Actualizaciones</span>
-            <span id="pwaVersionTag" class="badge-version">v1.2</span>
+            <span id="pwaVersionTag" class="badge-version">v1.3</span>
           </div>
           <div id="updateStatusText" style="font-size:0.78rem; color:var(--text-dim); margin-bottom:12px; line-height:1.4;">
             Esta app funciona 100% offline. Toca el botón para verificar con GitHub si hay una nueva versión disponible.
@@ -1414,7 +1414,7 @@
     // =========================================================================
     // SISTEMA DE ACTUALIZACIÓN MANUAL Y GESTIÓN DE CACHÉ PWA
     // =========================================================================
-    const APP_CURRENT_VERSION = 'v1.2';
+    const APP_CURRENT_VERSION = 'v1.3';
     let toastTimeout = null;
 
     function showToast(msg, duration = 3200, type = 'info') {
