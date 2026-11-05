@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "civic_scanner")(type "KiCad")(uri "${KIPRJMOD}/lib/civic_scanner.kicad_sym")(options "")(descr "Simbolos propios del escaner (L9637D)"))
+)

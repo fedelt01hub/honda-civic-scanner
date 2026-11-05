@@ -1,0 +1,31 @@
+# Opens the scanner assembly in the FreeCAD GUI with colours and an isometric view.
+# Usage: freecad.exe abrir_ensamble.FCMacro
+import os
+
+import FreeCAD as App
+import FreeCADGui as Gui
+
+HERE = r"C:\Users\Fede\Documents\PROYECTOS\honda-civic-scanner\hardware\freecad"
+doc = App.openDocument(os.path.join(HERE, "civic_scanner_ensamble.FCStd"))
+App.setActiveDocument(doc.Name)
+Gui.activateWorkbench("PartWorkbench")
+
+style = {
+    "Base": ((0.95, 0.55, 0.15), 0),
+    "Tapa": ((0.25, 0.45, 0.85), 55),
+    "J2_USB_C": ((0.78, 0.78, 0.80), 0),
+    "SW1_RESET": ((0.15, 0.15, 0.15), 0),
+    "SW2_BOOT": ((0.15, 0.15, 0.15), 0),
+    "F1_PTC": ((0.9, 0.8, 0.2), 0),
+}
+for name, (color, transp) in style.items():
+    o = doc.getObject(name)
+    if o is not None:
+        o.ViewObject.ShapeAppearance = (App.Material(DiffuseColor=color),)
+        o.ViewObject.Transparency = transp
+
+view = Gui.ActiveDocument.ActiveView
+view.viewIsometric()
+Gui.SendMsgToActiveView("ViewFit")
+doc.save()
+App.Console.PrintMessage("Ensamble abierto: Base (naranja), Tapa (azul, semitransparente), PCB de KiCad.\n")

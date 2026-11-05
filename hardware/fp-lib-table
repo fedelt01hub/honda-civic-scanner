@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "civic_scanner")(type "KiCad")(uri "${KIPRJMOD}/lib/civic_scanner.pretty")(options "")(descr "Footprints propios del escaner"))
+)
