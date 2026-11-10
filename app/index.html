@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>K-Lino v1.4 - Escáner & Datalogger</title>
+  <title>K-Lino v1.5 - Escáner & Datalogger</title>
   
   <!-- Cache Control (Evita que el navegador retenga versiones viejas al recargar) -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -22,7 +22,7 @@
 
   <style>
     /* =========================================================================
-     * K-LINO v1.4 — Estilo "tablero OEM": negro, blanco, iluminación ámbar
+     * K-LINO v1.5 — Estilo "tablero OEM": negro, blanco, iluminación ámbar
      * ========================================================================= */
     @font-face {
       font-family: 'Barlow Condensed';
@@ -1013,7 +1013,7 @@
   <header>
     <div class="brand">
       <div>
-        <div class="brand-title"><span class="brand-badge">K-LINE</span> <span class="brand-version" id="brandVersionBadge">v1.4</span></div>
+        <div class="brand-title"><span class="brand-badge">K-LINE</span> <span class="brand-version" id="brandVersionBadge">v1.5</span></div>
       </div>
     </div>
     <button id="btnConnect" class="btn-connect" onclick="toggleBleConnection()">
@@ -1355,7 +1355,7 @@
         <div class="sub-block">
           <div class="sub-block-head">
             <span class="sub-heading">Actualizaciones</span>
-            <span id="pwaVersionTag" class="badge-version">v1.4</span>
+            <span id="pwaVersionTag" class="badge-version">v1.5</span>
           </div>
           <div id="updateStatusText" style="font-size:0.78rem; color:var(--text-dim); margin-bottom:12px; line-height:1.4;">
             Esta app funciona 100% offline. Toca el botón para verificar con GitHub si hay una nueva versión disponible.
@@ -1488,7 +1488,7 @@
     // =========================================================================
     // SISTEMA DE ACTUALIZACIÓN MANUAL Y GESTIÓN DE CACHÉ PWA
     // =========================================================================
-    const APP_CURRENT_VERSION = 'v1.4';
+    const APP_CURRENT_VERSION = 'v1.5';
     let toastTimeout = null;
 
     function showToast(msg, duration = 3200, type = 'info') {
@@ -3022,8 +3022,10 @@
         run(performance.now() - (withAudio ? audio.currentTime * 1000 : 0));
       };
 
+      // APK: autoplay permitido pero el WebView en frío tarda en decodificar -> esperar más al audio
+      const AUDIO_WAIT_MS = IS_NATIVE ? 1500 : 400;
       splash.addEventListener('pointerdown', finish, { once: true });
-      setTimeout(finish, 3500);  // seguro: nunca bloquear la app
+      setTimeout(finish, 3100 + AUDIO_WAIT_MS);  // seguro: nunca bloquear la app
 
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) { setTimeout(finish, 600); return; }
       if (localStorage.getItem('klinoSplashSound') === '0') { start(false); return; }
@@ -3037,7 +3039,7 @@
         })
         .then(() => start(true))
         .catch(() => start(false));
-      setTimeout(() => start(false), 400);  // si el audio tarda o está bloqueado: sin sonido
+      setTimeout(() => start(false), AUDIO_WAIT_MS);  // si el audio tarda o está bloqueado: sin sonido
     })();
 
     function setSplashSound(on) {
